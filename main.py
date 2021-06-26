@@ -1,4 +1,4 @@
-""" Project PPP v0.1 """
+""" Project PPP v0.1.1 """
 
 from keyinput import *
 
@@ -40,7 +40,6 @@ class Game:
         """
         Keyinput.update()
         Obj.s.update()
-
         Obj.collision_check_all()
         Obj.apply_dxdy_all()
 
@@ -52,16 +51,20 @@ class Game:
         Score.draw()
 
     @classmethod
+    @processing_time_gauge
+    def loop(cls):
+        """1루프당 processing time을 측정하기 위해 따로 분리된 영역.
+        """
+        cls.update(), cls.draw(), cls.time()
+        pg.display.update()  # 모든 draw 명령을 화면에 반영
+        SYS.mode_update()
+
+    @classmethod
     def run(cls):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
         """
         while SYS.mode() == 'GAME':
-            cls.update()
-            cls.draw()
-            cls.time()
-
-            pg.display.update()  # 모든 draw 명령을 화면에 반영
-            SYS.mode_update()
+            cls.loop()
             fps.tick(100)  # FPS 100
 
     @classmethod
@@ -113,4 +116,4 @@ if __name__ == '__main__':
 
             pg.display.update()
             SYS.mode_update()
-            fps.tick(100)
+            fps.tick(FPS)

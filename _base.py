@@ -1,4 +1,4 @@
-""" Project PPP v0.1 """
+""" Project PPP v0.1.1 """
 
 import ctypes  # 해상도 구하는 용도
 import os  # 창 모드 초기 위치: 정가운데
@@ -10,10 +10,14 @@ from pygame.locals import *
 pg.init()
 
 fps = pg.time.Clock()
+FPS = 100
 
 TILE_LENGTH = 40  # 타일 한 변의 길이
 
 GAME_TITLE_NAME = "Powerful Ping-Pong"
+
+DANGER, WARNING, CAUTION, NOTICE, SAFETY = \
+    'DANGER', 'WARNING', 'CAUTION', 'NOTICE', 'SAFETY'
 
 OR, AND, XOR, ALL = 'or', 'and', 'xor', 'all'
 IN, OVER, UNDER, BETWEEN = 'in', 'over', 'under', 'between'
@@ -124,5 +128,3 @@ class SYS:
         if cls.__mode_temp is not None:
             cls.__mode = cls.__mode_temp
             cls.__mode_temp = None
-
-
