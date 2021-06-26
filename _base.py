@@ -1,4 +1,4 @@
-""" Project PPP v0.1.1 """
+""" Project PPP v0.1.2 """
 
 import ctypes  # 해상도 구하는 용도
 import os  # 창 모드 초기 위치: 정가운데
@@ -113,6 +113,7 @@ class SYS:
     __mode = 'TITLE'  # TITLE, GAME, END
     __mode_temp = None
     mode_is_changed = False
+    rect = Rect(0, 0, 1280, 720)
 
     @classmethod
     def mode(cls, mode=None):

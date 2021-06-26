@@ -1,4 +1,4 @@
-""" Project PPP v0.1.1 """
+""" Project PPP v0.1.2 """
 
 import math
 import random
@@ -125,8 +125,8 @@ class Ball(Obj):
         self.dx = math.cos(self.radian) * self.speed
         self.dy = -math.sin(self.radian) * self.speed
 
-        if not self.rect.colliderect(Screen.rect):  # 화면 밖으로 나갈 경우
-            if left_right(self.rect, Screen.rect):
+        if not self.rect.colliderect(SYS.rect):  # 화면 밖으로 나갈 경우
+            if left_right(self.rect, SYS.rect):
                 Score.plus(RIGHT)
             else:
                 Score.plus(LEFT)

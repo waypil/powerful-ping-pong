@@ -1,4 +1,4 @@
-""" Project PPP v0.1.1 """
+""" Project PPP v0.1.2 """
 
 from keyinput import *
 
@@ -17,103 +17,128 @@ class Game:
         Time.update()  # 프레임 시간 +0.01초
         # Time.draw(True, 2)  # 프레임 시간을 화면에 표시
 
-    @classmethod
-    def init(cls):
+    def __init__(self, name):
+        self.name = name
+
+    def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        Score.reset()
-        Background(None)
 
-        Wall(TOP, (0, 0), TOPLEFT)
-        Wall(BOTTOM, Screen.rect.bottomleft, BOTTOMLEFT)
-
-        Ball(None, Screen.rect.center, CENTER)
-
-        Rival(LEFT, (tl_px(3), Screen.rect.centery), MIDLEFT)
-        Player(RIGHT, tuple_cal(Screen.rect.midright, tl_px(-3, 0)), MIDRIGHT)
-
-        Time.start()
-
-    @classmethod
-    def update(cls):
+    def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
+        버그 방지를 위하여 순서를 바꾸지 말 것.
+        또한 dump check all과 revive check all은 합치지 말 것.
         """
         Keyinput.update()
         Obj.s.update()
-        Obj.collision_check_all()
-        Obj.apply_dxdy_all()
 
-    @classmethod
-    def draw(cls):
+    def draw(self):
         """update 결과에 따라, 배경/스프라이트를 화면에 표시.
         """
+        Screen.on.fill(BLACK)
         Obj.s.draw(Screen.on)
-        Score.draw()
 
-    @classmethod
-    @processing_time_gauge
-    def loop(cls):
-        """1루프당 processing time을 측정하기 위해 따로 분리된 영역.
+    def run(self):
+        """게임 실행 및 구동. (게임이 돌아가는 곳)
         """
-        cls.update(), cls.draw(), cls.time()
+        self.init()
+
+        while SYS.mode() == self.name:
+            self.loop()
+            fps.tick(FPS)
+
+        self.off()
+
+    @processing_time_gauge
+    def loop(self):
+        self.update(), self.draw(), self.time()
         pg.display.update()  # 모든 draw 명령을 화면에 반영
         SYS.mode_update()
 
-    @classmethod
-    def run(cls):
-        """게임 실행 및 구동. (게임이 돌아가는 곳)
+    def off(self):
+        """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
-        while SYS.mode() == 'GAME':
-            cls.loop()
-            fps.tick(100)  # FPS 100
-
-    @classmethod
-    def off(cls):
-        """게임 실행 및 구동. (게임이 돌아가는 곳)
-        """
+        # SYS.mode_is_changed = False
         Time.off()
         Obj.s = pg.sprite.Group()
         clean_subclasses(Obj)
 
 
+class Stage(Game):
+    def init(self):
+        super().init()
+        Score.reset()
+
+        Background(None)
+        Wall(TOP, (0, 0), TOPLEFT)
+        Wall(BOTTOM, SYS.rect.bottomleft, BOTTOMLEFT)
+
+        Ball(None, SYS.rect.center, CENTER)
+
+        Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
+        Player(RIGHT, tuple_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
+
+        Time.start()
+
+    def update(self):
+        super().update()
+        Obj.collision_check_all()
+        Obj.apply_dxdy_all()
+
+    def draw(self):
+        super().draw()
+        Score.draw()
+
+
+class Title(Game):
+    def draw(self):
+        super().draw()
+        Game.font_big.write(GAME_TITLE_NAME)
+        Game.font.write("PRESS ENTER TO START GAME.")
+
+
+class End(Game):
+    def __init__(self, name):
+        super().__init__(name)
+
+    def init(self):
+        super().init()
+        Background(None)
+        Wall(TOP, (0, 0), TOPLEFT)
+        Wall(BOTTOM, SYS.rect.bottomleft, BOTTOMLEFT)
+
+    def draw(self):
+        super().draw()
+        Score.draw()
+
+        if Score.win == LEFT:
+            Game.font_big.write("WIN", tl_px(6.5, 4))
+            Game.font_big.write("LOSE", tl_px(20, 4))
+            Game.font.write("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
+            Rival.hard_mode = False
+        elif Score.win == RIGHT:
+            Game.font_big.write("LOSE", tl_px(6, 4))
+            Game.font_big.write("WIN", tl_px(20.5, 4))
+            Game.font.write("PRESS ENTER TO CHALLENGE THE HARD MODE.",
+                            tl_px(6, 13))
+            Rival.hard_mode = True
+        else:
+            raise AssertionError
+
+
 if __name__ == '__main__':
-    Screen.update_resolution()
-    Img.load_all()
+    Screen.update_resolution()  # 화면 초기 설정
+    Img.load_all()  # 모든 이미지 불러오기
+
+    title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 
     while True:
-        while SYS.mode() == 'TITLE':
-            Keyinput.update()
+        if SYS.mode() == 'TITLE':
+            title.run()
 
-            Screen.on.fill(BLACK)
-            Game.font_big.write(GAME_TITLE_NAME)
-            Game.font.write("PRESS ENTER TO START GAME.")
+        elif SYS.mode() == 'GAME':
+            stage.run()
 
-            pg.display.update()
-            SYS.mode_update()
-            fps.tick(100)
+        elif SYS.mode() == 'END':
+            end.run()
 
-        if SYS.mode() == 'GAME':
-            Game.init(), Game.run(), Game.off()
-
-        while SYS.mode() == 'END':
-            Keyinput.update()
-
-            Score.draw()
-
-            if Score.win == LEFT:
-                Game.font_big.write("WIN", tl_px(6.5, 4))
-                Game.font_big.write("LOSE", tl_px(20, 4))
-                Game.font.write("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
-                Rival.hard_mode = False
-            elif Score.win == RIGHT:
-                Game.font_big.write("LOSE", tl_px(6, 4))
-                Game.font_big.write("WIN", tl_px(20.5, 4))
-                Game.font.write("PRESS ENTER TO CHALLENGE THE HARD MODE.",
-                                tl_px(6, 13))
-                Rival.hard_mode = True
-            else:
-                raise AssertionError
-
-            pg.display.update()
-            SYS.mode_update()
-            fps.tick(FPS)

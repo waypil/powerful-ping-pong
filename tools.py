@@ -1,4 +1,4 @@
-""" Project PPP v0.1.1 """
+""" Project PPP v0.1.2 """
 
 import math
 import random
