@@ -1,12 +1,26 @@
-""" Project PPP v0.1.2.2 """
+""" Project PPP v0.1.3 """
 
+import csv
 import math
 import random
 import time  # processing_time_gauge()에 사용. Framewatch/Time에 사용하지 않음
+
 from typing import Union
 from types import FunctionType, MethodType  # processing_time_gauge()에 사용
 
 from _base import *
+
+
+def load_csv(path, return_shape=False):
+    csv_file = open(path, 'r', encoding='utf-8-sig')
+    csv_iter = csv.reader(csv_file)
+    csv_array = [row for row in map(list, zip(*csv_iter))]
+
+    if return_shape:  # array_shape
+        shape = (len(csv_array), len(csv_array[0]))
+        return csv_array, shape
+    else:
+        return csv_array  # 행열[y][x] → 열행[x][y] 변환 저장
 
 
 def processing_time_gauge(func):  # method/function의 처리 속도 측정 데코레이터

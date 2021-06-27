@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2.2 """
+""" Project PPP v0.1.3 """
 
 import ctypes  # 해상도 구하는 용도
 import os  # 창 모드 초기 위치: 정가운데
@@ -43,29 +43,6 @@ YELLOW = (255, 255, 0)
 CYAN = (0, 255, 255)
 PURPLE = (255, 0, 255)
 SKYBLUE = (93, 148, 251)
-
-
-class Img:
-    s = {}
-
-    @classmethod
-    def load_all(cls):
-        img_back0 = pg.image.load(f"resources/images/back0.png") \
-            .convert_alpha()
-        img_wall = pg.image.load(f"resources/images/wall.png") \
-            .convert_alpha()
-        img_ball = pg.image.load(f"resources/images/ball.png") \
-            .convert_alpha()
-        img_paddle_l = pg.image.load(f"resources/images/paddle_l.png") \
-            .convert_alpha()
-        img_paddle_r = pg.image.load(f"resources/images/paddle_r.png") \
-            .convert_alpha()
-
-        cls.s['back0'] = img_back0
-        cls.s['wall'] = img_wall
-        cls.s['ball'] = img_ball
-        cls.s['paddle_l'] = img_paddle_l
-        cls.s['paddle_r'] = img_paddle_r
 
 
 class Screen:

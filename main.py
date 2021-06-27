@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2.2 """
+""" Project PPP v0.1.3 """
 
 from keyinput import *
 
@@ -81,15 +81,19 @@ class Game:
 class Stage(Game):
     def create(self):
         super().create()
-        Background(None)
+        Background('black')
 
         Wall(TOP, tl_px(2, 0), TOPLEFT)
-        Wall(BOTTOM, tl_px(2, 18), BOTTOMLEFT)
+        Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
 
-        Ball(None, SYS.rect.center, CENTER)
+        Ball('ball', SYS.rect.center, CENTER)
 
         Player(RIGHT, tuple_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
         Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
+
+        Skill('z', tl_px(20, 16), TOPLEFT)
+        Skill('x', tl_px(22, 16), TOPLEFT)
+        Skill('c', tl_px(24, 16), TOPLEFT)
 
     def init(self):
         super().init()
@@ -149,9 +153,18 @@ class End(Game):
             raise AssertionError
 
 
+def load_sprites_all():
+    """'sprite' in subclass.__dict__ : 자신의 클래스만 탐색함.
+    hasattr(subclass, 'sprite') :  superclass도 포함해서 탐색함.
+    """
+    for subclass in get_subclasses(Obj, get_supers=True, get_subs=False):
+        if 'sprite' in subclass.__dict__ and not subclass.sprite:
+            subclass.load_sprites()
+
+
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
-    Img.load_all()  # 모든 이미지 불러오기
+    load_sprites_all()  # 모든 이미지 불러오기
 
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 
