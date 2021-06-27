@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2 """
+""" Project PPP v0.1.2.1 """
 
 from keyinput import *
 
@@ -58,7 +58,6 @@ class Game:
     def off(self):
         """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
-        # SYS.mode_is_changed = False
         Time.off()
         Obj.s = pg.sprite.Group()
         clean_subclasses(Obj)

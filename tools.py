@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2 """
+""" Project PPP v0.1.2.1 """
 
 import math
 import random
@@ -19,7 +19,7 @@ def processing_time_gauge(func):  # method/function의 처리 속도 측정 데�
             return NOTICE  # 유의
         elif caution > end_time:
             return CAUTION  # 주의: frame drop에 영향을 줄 수 있음.
-        if warning > end_time:
+        elif warning > end_time:
             return WARNING  # 경고: frame drop이 발생할 수 있음. 최적화 요망.
         else:
             return DANGER  # 위험: frame drop 발생 중. 최적화 필수.

@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2 """
+""" Project PPP v0.1.2.1 """
 
 import ctypes  # 해상도 구하는 용도
 import os  # 창 모드 초기 위치: 정가운데
