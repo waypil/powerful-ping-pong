@@ -1,9 +1,10 @@
-""" Project PPP v0.1.2.1 """
+""" Project PPP v0.1.2.2 """
 
 import math
 import random
 import time  # processing_time_gauge()에 사용. Framewatch/Time에 사용하지 않음
 from typing import Union
+from types import FunctionType, MethodType  # processing_time_gauge()에 사용
 
 from _base import *
 
@@ -14,18 +15,18 @@ def processing_time_gauge(func):  # method/function의 처리 속도 측정 데�
         safety, notice, caution, warning = spf / 10, spf / 5, spf / 2, spf
 
         if safety > end_time:
-            return SAFETY  # 안전
+            return SAFETY  # 양호(SAFETY) (return False로 바꾸면 표시 비활성화)
         elif notice > end_time:
-            return NOTICE  # 유의
+            return NOTICE  # 유의(NOTICE)
         elif caution > end_time:
-            return CAUTION  # 주의: frame drop에 영향을 줄 수 있음.
+            return CAUTION  # 주의(CAUTION): frame drop에 영향을 줄 수 있음.
         elif warning > end_time:
-            return WARNING  # 경고: frame drop이 발생할 수 있음. 최적화 요망.
+            return WARNING  # 경고(WARNING): frame drop의 가능성. 최적화 요망
         else:
-            return DANGER  # 위험: frame drop 발생 중. 최적화 필수.
+            return DANGER  # 위험(DANGER): frame drop 발생 중. 최적화 필수
 
     def wrapper(*args, **kwargs):
-        try:  # class method or instance method
+        if type(func) is MethodType:  # class method or instance method
             self, args = args[0], args[1:]
 
             if self.__class__.__name__ == 'type':  # class method
@@ -37,11 +38,14 @@ def processing_time_gauge(func):  # method/function의 처리 속도 측정 데�
             returned = func(self, *args, **kwargs)  # 처리 속도 측정 중
             end_time = time.time() - start_time  # 측정 종료
 
-        except IndexError:  # static method or function
+        elif type(func) is FunctionType:  # static method or function
             name = ''
             start_time = time.time()  # 처리 속도 측정 시작
             returned = func(*args, **kwargs)  # 함수 실행 & 처리 속도 측정 중
             end_time = time.time() - start_time  # 측정 종료
+
+        else:  # 잘못된 사용
+            raise AttributeError
 
         if end_time != 0.0 and (result := __get_result(end_time, FPS)):
             print(f"{name}{func.__name__}() : {end_time}  [{result}]")
@@ -232,6 +236,22 @@ class Time:  # Framewatch를 객체화한 클래스.
         cls.__clock.reset(cls.current)
 
 
+def collision_check(*args):  # *args=([objs_a, objs_b], [objs_a, objs_b] ... )
+    for objs_a, objs_b in args:
+        colls = pg.sprite.groupcollide(objs_a, objs_b, False, False)
+        for obj_a, obj_b in colls.items():
+            obj_b = obj_b[0]  # [*obj] 꼴로 출력되기 때문
+            obj_a.after_coll(obj_b), obj_b.after_coll(obj_a)
+
+
+# def do(obj, func):  # str을 입력하면 그에 해당하는 method를 실행 (return?)
+#     getattr(obj, func)()
+
+
+def group(*groups: pg.sprite.Group) -> pg.sprite.Group():
+    return pg.sprite.Group(*groups)
+
+
 def random_radian() -> float:
     while True:
         radian = random.uniform(0.0, math.pi * 2)
@@ -271,10 +291,23 @@ def tuple_cal(tuple_a: Union[list, tuple], tuple_b: Union[list, tuple],
     return tuple(result)
 
 
-def clean_subclasses(classes):
-    for sub_class in classes.__subclasses__():
-        sub_class.s = pg.sprite.Group()
-        sub_class.group = {}
+def get_subclasses(superclass, get_supers=False, get_subs=True):
+    subclass_list = []
+    for sub_class in superclass.__subclasses__():
+        if sub_class.__subclasses__():
+            if get_supers:
+                subclass_list.append(sub_class)
+            if get_subs:
+                subclass_list += get_subclasses(sub_class)
+        else:
+            subclass_list.append(sub_class)
+    return subclass_list
+
+
+# def clean_subclasses(classes):
+#     for sub_class in classes.__subclasses__():
+#         sub_class.s = pg.sprite.Group()
+#         sub_class.group = {}
 
 
 def random_denom(denominator):  # 1/denominator의 확률로 True를 뽑기.
@@ -357,19 +390,12 @@ def calculate_radian(rect_a, rect_b):
     return radian
 
 
-def calculate_distance(rect_a, rect_b):  # 두 좌표 사이의 거리 구하기.
-    if type(rect_a) is pg.Rect:
-        ax, ay = rect_a.centerx, rect_a.centery
-    elif type(rect_a) is tuple:
-        ax, ay = rect_a
-
-    if type(rect_b) is pg.Rect:
-        bx, by = rect_b.centerx, rect_b.centery
-    elif type(rect_b) is tuple:
-        bx, by = rect_b
-
+def calculate_distance(rect_a: Union[pg.Rect, tuple],
+                       rect_b: Union[pg.Rect, tuple]):
+    ax, ay = rect_a if type(rect_a) is tuple else rect_a.center
+    bx, by = rect_b if type(rect_b) is tuple else rect_b.center
     distance = math.sqrt((ax - bx) ** 2 + (ay - by) ** 2)
-    return distance
+    return distance  # 두 좌표 사이의 거리
 
 
 def circular_relocation(radian, radius, center_of_circle):

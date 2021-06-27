@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2.1 """
+""" Project PPP v0.1.2.2 """
 
 import math
 import random
@@ -9,42 +9,19 @@ from tools import *
 class Obj(pg.sprite.Sprite):
     """모든 객체의 틀.
     """
-    s = pg.sprite.Group()
-
-    @classmethod
-    def collision_check_all(cls):
-        colls = pg.sprite.groupcollide(Paddle.s, Wall.s, False, False)
-        for paddle, wall in colls.items():
-            wall = wall[0]
-            if wall.name == TOP:
-                paddle.rect.top = wall.rect.bottom
-            elif wall.name == BOTTOM:
-                paddle.rect.bottom = wall.rect.top
-
-        colls = pg.sprite.groupcollide(Ball.s, Paddle.s, False, False)
-        for ball, paddle in colls.items():
-            ball.bounce(paddle[0])
-
-        colls = pg.sprite.groupcollide(Ball.s, Wall.s, False, False)
-        for ball, wall in colls.items():
-            ball.bounce(wall[0])
-
-    @classmethod
-    def apply_dxdy_all(cls):
-        for name, obj in [*Paddle.group.items(), *Ball.group.items()]:
-            obj.apply_dxdy()
+    s = None
 
     @classmethod
     def get(cls, name=None):
-        try:
-            return cls.group[name]  # 여기서 cls는 Obj가 아닌, self.__class__
-        except KeyError:
-            print(f"{cls.__name__}의 {name} 객체가 존재하지 않습니다.")
+        for obj in cls.s.sprites():  # 여기서 cls는 Obj가 아닌, self.__class__
+            if obj.name == name:
+                return obj
+        raise KeyError(f"{cls.__name__}의 '{name}' 객체가 존재하지 않습니다. "
+                       f"len({cls.__name__}.s) : {len(cls.s.sprites())}")
 
     def __init__(self, name):
         super().__init__()
         Obj.s.add(self), self.__class__.s.add(self)
-        self.__class__.group[name] = self
 
         self.name = name
         self.image, self.rect = pg.Surface((0, 0)), Rect(0, 0, 0, 0)
@@ -65,6 +42,9 @@ class Obj(pg.sprite.Sprite):
         else:
             return self.__class__.__name__
 
+    def after_coll(self, obj):
+        pass
+
     def apply_dxdy(self):
         self.dxd += self.dx - int(self.dx)
         self.dyd += self.dy - int(self.dy)
@@ -77,14 +57,9 @@ class Obj(pg.sprite.Sprite):
         self.dyd -= int(self.dyd)  # 소수 부분만 남김 (다음 dyd와 합산)
         self.dx, self.dy = 0, 0
 
-    def die(self):
-        del self.__class__.group[self.name]
-        self.kill()
-
 
 class Background(Obj):
-    s = pg.sprite.Group()
-    group = {}
+    s = None
 
     def __init__(self, name):
         super().__init__(name)
@@ -93,8 +68,7 @@ class Background(Obj):
 
 
 class Wall(Obj):
-    s = pg.sprite.Group()
-    group = {}
+    s = None
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name)
@@ -103,8 +77,7 @@ class Wall(Obj):
 
 
 class Ball(Obj):
-    s = pg.sprite.Group()
-    group = {}
+    s = None
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name)
@@ -147,7 +120,7 @@ class Ball(Obj):
                 self.dy = abs(self.dy) if obj.name == TOP else -abs(self.dy)
                 self.radian = math.atan2(-self.dy, self.dx)
 
-            self.speed += 0.3
+            self.speed += 0.3  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
             self.coll_log[obj.name] = True
             item_replace_all(self.coll_log, False, obj.name)
 
@@ -157,11 +130,13 @@ class Ball(Obj):
         self.speed, self.dx, self.dy, self.radian = 5, 0, 0, random_radian()
         item_replace_all(self.coll_log, False)
 
+    def after_coll(self, obj):
+        super().after_coll(obj)
+        if obj.clsname('Paddle') or obj.clsname('Wall'):
+            self.bounce(obj)
+
 
 class Paddle(Obj):
-    s = pg.sprite.Group()
-    group = {}
-
     def __init__(self, name, xy: tuple, point):
         super().__init__(name)
         self.image = Img.s[f'paddle_{name[0]}']
@@ -178,17 +153,29 @@ class Paddle(Obj):
         if command == DOWN:
             self.dy = self.speed
 
+    def after_coll(self, obj):
+        super().after_coll(obj)
+
+        if obj.clsname('Wall'):
+            if obj.name == TOP:
+                self.rect.top = obj.rect.bottom
+            elif obj.name == BOTTOM:
+                self.rect.bottom = obj.rect.top
+
     def apply_dxdy(self):
         super().apply_dxdy()
         item_replace_all(self.move_log, False)
 
 
 class Player(Paddle):
+    s = None
+
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
 
 
 class Rival(Paddle):
+    s = None
     hard_mode = False
 
     def __init__(self, name, xy: tuple, point):
@@ -216,9 +203,8 @@ class Rival(Paddle):
 class Score:
     font_l = Text('GenShinGothic-Monospace-Bold', 60, WHITE, tl_px(8, 0))
     font_r = Text('GenShinGothic-Monospace-Bold', 60, WHITE, tl_px(23, 0))
-    s = {}
     win = None
-    win_score = 5
+    win_score = 1
 
     @classmethod
     def draw(cls):
@@ -227,12 +213,17 @@ class Score:
     @classmethod
     def plus(cls, obj_name, score=1):
         cls.s[obj_name] += score
+        cls.win_check()
 
+    @classmethod
+    def win_check(cls):
         if cls.s[LEFT] >= cls.win_score:
             cls.win = LEFT
-            SYS.mode('END')
         elif cls.s[RIGHT] >= cls.win_score:
             cls.win = RIGHT
+
+        if cls.win:
+            Ball.get().remove(Obj.s)  # Obj.s.remove(Ball.get())와 동일
             SYS.mode('END')
 
     @classmethod
@@ -241,6 +232,3 @@ class Score:
             cls.s = {LEFT: 0, RIGHT: 0}
         if reset_win:
             cls.win = False
-
-
-

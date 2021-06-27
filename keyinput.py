@@ -1,4 +1,4 @@
-""" Project PPP v0.1.2.1 """
+""" Project PPP v0.1.2.2 """
 
 import sys
 from object import *
