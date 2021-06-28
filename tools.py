@@ -143,7 +143,8 @@ def processing_time_gauge(func):  # method/function의 처리 속도 측정 데�
         else:  # 잘못된 사용
             raise AttributeError
 
-        if end_time != 0.0 and (result := __get_result(end_time, FPS)):
+        result = __get_result(end_time, FPS)
+        if end_time != 0.0 and result:
             print(f"{name}{func.__name__}() : {end_time}  [{result}]")
 
         if returned is not None:
