@@ -1,9 +1,10 @@
-""" Project PPP v0.1.3 """
+""" Project PPP v0.1.4 """
 
 import csv
 import math
+import os
 import random
-import time  # processing_time_gauge()에 사용. Framewatch/Time에 사용하지 않음
+import time  # processing_time_gauge()에 사용. Framewatch/Time엔 사용하지 않음
 
 from typing import Union
 from types import FunctionType, MethodType  # processing_time_gauge()에 사용
@@ -11,7 +12,73 @@ from types import FunctionType, MethodType  # processing_time_gauge()에 사용
 from _base import *
 
 
-def load_csv(path, return_shape=False):
+class Image:
+    def __init__(self, class_name: str):
+        self.sprite = {}
+        self.folder_name = class_name.lower()
+        self.path = f"./resources/images/{self.folder_name}"
+        self.defalut_subkey = ''
+
+        self.create_sprite_dict()
+
+    def __str__(self):
+        return str(self.sprite)
+
+    def __getitem__(self, keys):
+        sprite = self.sprite
+
+        for key in list(keys):
+            if type(sprite) is dict:
+                # print(sprite)
+                sprite = sprite[key] if key else sprite[self.defalut_subkey]
+
+        return sprite
+
+    def create_sprite_dict(self):
+        img_names, csv_name = self.__search_file_names()
+
+        if csv_name:
+            csv_array, csv_size = load_csv(f"{self.path}/{csv_name}")
+            self.__divide_sprites_process(img_names, csv_array, csv_size)
+        else:
+            self.__normal_sprites_process(img_names)
+
+    def __search_file_names(self):
+        for _path_, _subfolder_names_, file_names in os.walk(self.path):
+            csv_name, img_names = divide(file_names, '__tile__.csv')
+            return img_names, csv_name
+
+    def __normal_sprites_process(self, img_names):
+        for img_name in img_names:
+            img_sprt = pg.image.load(f"{self.path}/{img_name}").convert_alpha()
+            name, _extension_ = img_name.split('.')  # 이름, 확장자(png)
+
+            self.sprite[name] = img_sprt
+
+    def __divide_sprites_process(self, img_names, csv_array, csv_size):
+        for img_name in img_names:
+            img_sprt = pg.image.load(f"{self.path}/{img_name}").convert_alpha()
+            img_rect = img_sprt.get_rect()
+            name, _extension_ = img_name.split('.')  # 이름, 확장자(png)
+
+            w, h = img_rect.w // csv_size[0], img_rect.h // csv_size[1]
+
+            for tile_x in range(csv_size[0]):
+                for tile_y in range(csv_size[1]):
+                    x = tile_x * w
+                    y = tile_y * h
+
+                    if name not in self.sprite:
+                        self.sprite[name] = {}
+
+                    code = csv_array[tile_x][tile_y]
+                    if code.startswith('_'):  # '_abc' → 'abc'
+                        code = self.defalut_subkey = code[1:]
+
+                    self.sprite[name][code] = img_sprt.subsurface((x, y, w, h))
+
+
+def load_csv(path, return_shape=True):
     csv_file = open(path, 'r', encoding='utf-8-sig')
     csv_iter = csv.reader(csv_file)
     csv_array = [row for row in map(list, zip(*csv_iter))]
@@ -21,6 +88,21 @@ def load_csv(path, return_shape=False):
         return csv_array, shape
     else:
         return csv_array  # 행열[y][x] → 열행[x][y] 변환 저장
+
+
+def divide(remains: Union[list, tuple], *item_names: str):
+    if type(remains) is tuple:
+        remains = list(remains)
+
+    match_lists = {}
+    for name in item_names:
+        if name in remains:
+            match_lists[name] = remains.pop(remains.index(name))
+
+    if match_lists:
+        return *match_lists.values(), remains
+    else:
+        return [], remains
 
 
 def processing_time_gauge(func):  # method/function의 처리 속도 측정 데코레이터

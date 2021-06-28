@@ -1,4 +1,4 @@
-""" Project PPP v0.1.3 """
+""" Project PPP v0.1.4 """
 
 from keyinput import *
 
@@ -159,7 +159,7 @@ def load_sprites_all():
     """
     for subclass in get_subclasses(Obj, get_supers=True, get_subs=False):
         if 'sprite' in subclass.__dict__ and not subclass.sprite:
-            subclass.load_sprites()
+            subclass.sprite = Image(subclass.__name__)
 
 
 if __name__ == '__main__':

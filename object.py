@@ -1,8 +1,4 @@
-""" Project PPP v0.1.3 """
-
-import random
-import os
-import itertools  # product()를 이용하여 다중 for 구문 구현
+""" Project PPP v0.1.4 """
 
 from tools import *
 
@@ -11,34 +7,6 @@ class Obj(pg.sprite.Sprite):
     """모든 객체의 틀.
     """
     s = None
-
-    @classmethod
-    def load_sprites(cls):
-        csv_array, csv_size = False, False
-
-        folder_path = f"./resources/images/{cls.__name__.lower()}"
-        for path, subfolders, files in os.walk(folder_path):
-            for file in files:
-                file_path = f"{path}/{file}"
-                file_name, file_extension = file.split('.')
-
-                if file_extension == 'csv':
-                    csv_array, csv_size = load_csv(file_path, True)
-                else:
-                    img = pg.image.load(file_path).convert_alpha()
-
-                    if csv_array and csv_size:  # .png
-                        img_rect = img.get_rect()
-                        width = img_rect.w // csv_size[0]
-                        height = img_rect.h // csv_size[1]
-                        for tile_x, tile_y in itertools.product(*csv_size):
-                            sprite_code = csv_array[tile_x][tile_y]
-                            x, y = tile_x * width, tile_y * height
-                            subsprite = img.subsurface((x, y, w, h))
-                            cls.sprite[sprite_code] = subsprite
-
-                    else:
-                        cls.sprite[file_name] = img
 
     @classmethod
     def get(cls, name=None):
@@ -58,7 +26,7 @@ class Obj(pg.sprite.Sprite):
 
         self.name = name
 
-        self.image = self.__class__.sprite[name]
+        self.image = self.__class__.sprite[name, '']
         self.rect = set_rect(self.image, xy, point=point)
 
         self.dx, self.dy, self.dxd, self.dyd = 0, 0, 0.0, 0.0
@@ -102,9 +70,6 @@ class Background(Obj):
 class Wall(Obj):
     s = None
     sprite = {}
-
-    # def __init__(self, name, xy: tuple, point):
-    #     super().__init__(name, xy, point)
 
 
 class Ball(Obj):
