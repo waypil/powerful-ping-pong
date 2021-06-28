@@ -89,17 +89,18 @@ class Screen:
 class SYS:
     __mode = 'TITLE'  # TITLE, GAME, END
     __mode_temp = None
-    mode_is_changed = False
     rect = Rect(0, 0, 1280, 720)
 
     @classmethod
-    def mode(cls, mode=None):
-        if mode is None:
-            return cls.__mode
+    def mode(cls, *modes):
+        if modes:
+            return cls.__mode in modes
         else:
-            cls.__mode_temp = mode
-            if cls.__mode != cls.__mode_temp:
-                cls.mode_is_changed = True
+            return cls.__mode
+
+    @classmethod
+    def mode_change(cls, mode):
+        cls.__mode_temp = mode
 
     @classmethod
     def mode_update(cls):

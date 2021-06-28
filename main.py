@@ -169,11 +169,11 @@ if __name__ == '__main__':
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 
     while True:
-        if SYS.mode() == 'TITLE':
+        if SYS.mode('TITLE'):
             title.run()
 
-        elif SYS.mode() == 'GAME':
+        elif SYS.mode('GAME'):
             stage.run()
 
-        elif SYS.mode() == 'END':
+        elif SYS.mode('END'):
             end.run()

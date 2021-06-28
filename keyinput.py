@@ -21,11 +21,11 @@ class Keyinput:
         """키 설정
         """
         if key[pg.K_UP] or key[pg.K_w]:
-            if SYS.mode() == 'GAME':
+            if SYS.mode('GAME'):
                 Player.get(RIGHT).move(UP)
 
         if key[pg.K_DOWN] or key[pg.K_s]:
-            if SYS.mode() == 'GAME':
+            if SYS.mode('GAME'):
                 Player.get(RIGHT).move(DOWN)
 
         if key[pg.K_LEFT] or key[pg.K_a]:
@@ -52,16 +52,25 @@ class Keyinput:
             if event.key == pg.K_F11:  # F11 누르면 전체화면/창모드 전환
                 Screen.update_resolution()
 
-            if event.key == pg.K_UP or event.key == pg.K_w:
-                pass
+            if event.key == pg.K_z:
+                if SYS.mode('GAME'):
+                    Skill.get('z').push()
+
+            if event.key == pg.K_x:
+                if SYS.mode('GAME'):
+                    Skill.get('x').push()
+
+            if event.key == pg.K_c:
+                if SYS.mode('GAME'):
+                    Skill.get('c').push()
 
         elif event.type == KEYUP:
             if event.key == pg.K_ESCAPE:  # ESC 누르면 게임 종료
                 pg.quit(), sys.exit()
 
             if event.key == pg.K_RETURN:
-                if SYS.mode() in ['TITLE', 'END']:
-                    SYS.mode('GAME')  # ENTER 누르면 게임 시작
+                if SYS.mode('TITLE', 'END'):
+                    SYS.mode_change('GAME')  # ENTER 누르면 게임 시작
 
         elif event.type == MOUSEBUTTONUP:
             pass

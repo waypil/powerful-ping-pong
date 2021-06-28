@@ -27,6 +27,7 @@ class Obj(pg.sprite.Sprite):
         self.name = name
 
         self.image = self.__class__.sprite[name, '']
+        self.imgkey = self.__class__.sprite.defalut_subkey
         self.rect = set_rect(self.image, xy, point=point)
 
         self.dx, self.dy, self.dxd, self.dyd = 0, 0, 0.0, 0.0
@@ -45,6 +46,11 @@ class Obj(pg.sprite.Sprite):
                 return self.__class__.__bases__[0].__name__ == compare_name
         else:
             return self.__class__.__name__
+
+    def set_sprite(self, imgkey=None):
+        if imgkey is not None:
+            self.imgkey = imgkey
+        self.image = self.__class__.sprite[self.name][self.imgkey]
 
     def after_coll(self, obj):
         pass
@@ -192,6 +198,15 @@ class Skill(Obj):
     s = None
     sprite = {}
 
+    def __init__(self, name, xy: tuple, point):
+        super().__init__(name, xy, point)
+        self.is_available, self.is_pushed = True, False
+
+    def push(self):
+        if not self.is_pushed:
+            self.is_pushed = True
+            self.set_sprite('on')
+
 
 class Score:
     font_l = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(8, 0))
@@ -217,7 +232,7 @@ class Score:
 
         if cls.win:
             Ball.get().remove(Obj.s)  # Obj.s.remove(Ball.get())와 동일
-            SYS.mode('END')
+            SYS.mode_change('END')
 
     @classmethod
     def reset(cls, reset_score=True, reset_win=True):

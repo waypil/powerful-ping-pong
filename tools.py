@@ -68,12 +68,12 @@ class Image:
                     x = tile_x * w
                     y = tile_y * h
 
-                    if name not in self.sprite:
-                        self.sprite[name] = {}
-
                     code = csv_array[tile_x][tile_y]
                     if code.startswith('_'):  # '_abc' → 'abc'
                         code = self.defalut_subkey = code[1:]
+
+                    if name not in self.sprite:
+                        self.sprite[name] = {}
 
                     self.sprite[name][code] = img_sprt.subsurface((x, y, w, h))
 
