@@ -2,7 +2,9 @@
 
 from keyinput import *
 
-"""main > keyinput > object > tools > _base 순으로 import
+"""import 순서
+main > keyinput > object > /data/
+/data/: clstools > importtools > functools > _bios > _constants
 """
 
 
@@ -88,7 +90,7 @@ class Stage(Game):
 
         Ball('ball', SYS.rect.center, CENTER)
 
-        Player(RIGHT, tuple_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
+        Player(RIGHT, batch_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
         Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
 
         Skill('z', tl_px(20, 16), TOPLEFT)
@@ -123,7 +125,7 @@ class Stage(Game):
 class Title(Game):
     def draw(self):
         super().draw()
-        Game.font_big.write(GAME_TITLE_NAME)
+        Game.font_big.write("Powerful Ping-Pong")
         Game.font.write("PRESS ENTER TO START GAME.")
 
 
