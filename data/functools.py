@@ -48,14 +48,6 @@ def load_csv(path, return_shape=True):
 """ Recttools: Tools for pg.Rect, pixels, hitbox """
 
 
-def collision_check(*args):  # *args=([objs_a, objs_b], [objs_a, objs_b] ... )
-    for objs_a, objs_b in args:
-        colls = pg.sprite.groupcollide(objs_a, objs_b, False, False)
-        for obj_a, obj_b in colls.items():
-            obj_b = obj_b[0]  # [*obj] 꼴로 출력되기 때문
-            obj_a.after_coll(obj_b), obj_b.after_coll(obj_a)
-
-
 def left_right(rect_a, rect_b):
     a_position = rect_a.centerx if type(rect_a) is pg.Rect else rect_a
     b_position = rect_b.centerx if type(rect_b) is pg.Rect else rect_b
@@ -181,37 +173,63 @@ def get_hitbox(obj_rect, hitbox, point=CENTER):
 #
 
 
-""" Datatools: Tools for data-collection or boolean types """
-# data-collection: list[], tuple(), dictionary{}, set{}, iterator/yield etc.
+""" Datatools: Tools for all types in python """
 
 
-def batch(_type, sample: list, logical_operator, *args):
+def list_(*args):  # 모든 item/value들을 1차원 list로 강제 변환
+    """debug용 샘플: {'A': {'B': [2, {'C': 3}, 4, (5, 6, 7)], 'D': [8, 9]}}
     """
-    * OR: args 중 하나라도 sample(list)에 있을 경우 True.
-    * AND: args 전부 sample(list)에 있을 경우 True.
-    * ALL: sample(list) 전체가 args로만 채워져 있을 경우 True.
+    result = []
+
+    for arg in args:
+        if type(arg) in [tuple, list]:
+            result = [*result, *list_(*arg)]
+        elif type(arg) is dict:
+            result = [*result, *list_(*arg.values())]
+        else:
+            result.append(arg)
+
+    return result
+
+
+def batch(set_a, logical_operator: str, set_b):
     """
+    * OR: set_a의 item이/item들 중 하나라도 set_b에 있을 경우 True.
+    * AND: set_a의 item이/item들 모두가 set_b에 있을 경우 True.
+    * ALL: set_b가 set_a의 item(들)으로만 이루어져 있을 경우 True.
+    """
+    assert logical_operator in [OR, AND, ALL], 'Use OR/AND/ALL only.'
+
+    set_a, set_b = set(list_(set_a)), set(list_(set_b))
+
+    if logical_operator == OR:
+        return bool(set_a & set_b)  # 교집합
+    elif logical_operator == AND:
+        return bool(set_a == (set_a & set_b))  # 부분집합
+    else:  # ALL
+        return bool(set_a == set_b)  # 일치
+
+
+def batch_bool(boolean: bool, logical_operator: str,
+               samples: Union[list, tuple, dict]):
+    """
+    * OR: set_a의 item들 중 하나라도 set_b에 있을 경우 True.
+    * AND: set_a의 item들 모두가 set_b에 있을 경우 True.
+    """
+    assert logical_operator in [OR, AND], 'Use OR/AND only.'
+
     comparison = []
 
-    if _type == IN:
-        if logical_operator == ALL:
-            for _item in sample:
-                comparison.append(_item in args)
-            return False not in comparison
-        else:
-            for arg in args:
-                comparison.append(arg in sample)
+    if type(samples) is dict:
+        samples = samples.values()
 
-    else:  # if _type is bool:
-        for arg in args:
-            comparison.append(sample == arg)
+    for sample in samples:
+        comparison.append(boolean == bool(sample))
 
     if logical_operator == OR:
         return True in comparison
-    elif logical_operator == AND:
+    else:  # AND
         return False not in comparison
-    elif logical_operator == XOR:
-        return True in comparison and False in comparison
 
 
 def append(_list: list, _item, tidy: bool = False):
@@ -254,7 +272,7 @@ def divide(remains: Union[list, tuple], *item_names: str):
         return [], remains
 
 
-def item_replace_all(log: dict, insert_item, *exception_keys):
+def replace_items(log: dict, insert_item, *exception_keys):
     for key in log:
         if key not in exception_keys:
             log[key] = insert_item

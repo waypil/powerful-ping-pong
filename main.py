@@ -1,6 +1,9 @@
-""" Project PPP v0.1.5 """
+""" Project PPP v0.2.0 """
+
+from itertools import combinations  # 조합: collision_check()에서 사용
 
 from keyinput import *
+
 
 """import 순서
 main > keyinput > object > /data/: clstools > functools > _bios > _constants
@@ -87,7 +90,7 @@ class Stage(Game):
         Wall(TOP, tl_px(2, 0), TOPLEFT)
         Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
 
-        Ball('ball', SYS.rect.center, CENTER)
+        Ball('ball', SYS.rect.center, point=CENTER)
 
         Player(RIGHT, batch_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
         Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
@@ -111,10 +114,13 @@ class Stage(Game):
         Score.draw()
 
     def collision_check_all(self):
-        collision_check(
-            [group(self.players, self.rivals), group(self.balls, self.walls)],
-            [self.balls, self.walls]
-        )
+        for obj_a, obj_b in combinations(self.objs.sprites(), 2):
+            if not batch(COLLISION_CHECK_EXCEPTION, OR,
+                         [obj_a.clsname(), obj_b.clsname()]):
+                if pg.sprite.collide_rect(obj_a, obj_b):
+                    obj_a.after_coll(obj_b), obj_b.after_coll(obj_a)
+                else:
+                    obj_b.coll.now = []
 
     def apply_dxdy_all(self):
         for obj in self.objs.sprites():

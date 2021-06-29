@@ -1,4 +1,4 @@
-""" Project PPP v0.1.5 """
+""" Project PPP v0.2.0 """
 
 from data.clstools import *
 
@@ -11,7 +11,7 @@ class Obj(pg.sprite.Sprite):
     @classmethod
     def get(cls, name=None):
         objs = cls.s.sprites()  # cls.s는 Obj.s가 아닌, self.__class__.s
-        if len(objs) == 1:
+        if name is None:
             return cls.s.sprites()[0]
         else:
             for obj in objs:
@@ -23,8 +23,12 @@ class Obj(pg.sprite.Sprite):
     def __init__(self, name, xy: tuple = (0, 0), point=TOPLEFT):
         super().__init__()
         Obj.s.add(self), self.__class__.s.add(self)
+        self.__class__.copied += 1
 
-        self.name = name
+        if name == self.clsname().lower():
+            self.name = self.__class__.copied
+        else:
+            self.name = name
 
         self.image = self.__class__.sprite[name, '']
         self.imgkey = self.__class__.sprite.defalut_subkey
@@ -52,8 +56,8 @@ class Obj(pg.sprite.Sprite):
             self.imgkey = imgkey
         self.image = self.__class__.sprite[self.name][self.imgkey]
 
-    def after_coll(self, obj):
-        pass
+    def after_coll(self, obj):  # 자식 after_coll의 맨 아래에 배치할 것!
+        self.coll.all_add(obj)
 
     def apply_dxdy(self):
         self.dxd += self.dx - int(self.dx)
@@ -71,20 +75,23 @@ class Obj(pg.sprite.Sprite):
 class Background(Obj):
     s = None
     sprite = {}
+    copied = 0
 
 
 class Wall(Obj):
     s = None
     sprite = {}
+    copied = 0
 
 
 class Ball(Obj):
     s = None
     sprite = {}
+    copied = 0
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
-        self.init_rect = self.rect.copy()
+        self.init_rect = set_rect(self.image, SYS.rect.center, point=CENTER)
         self.speed = 5  # default
         self.radian = random_radian()
         self.delay = Time.get()
@@ -106,7 +113,7 @@ class Ball(Obj):
             self.reset()  # 초기 위치로 재배치
 
     def bounce(self, obj):  # 튕기기 함수.
-        if not self.coll.last[obj.name]:
+        if obj not in self.coll.last:
             if obj.clsname('Paddle'):
                 if obj.move_log[UP]:
                     target_rect = rect_xy_copy(self.rect, dy=-obj.speed * 3)
@@ -121,19 +128,22 @@ class Ball(Obj):
                 self.radian = math.atan2(-self.dy, self.dx)
 
             self.speed += 0.3  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
-            self.coll.last.add(obj.name, obj)
-            self.coll.last.clear_ex(obj.name)
+            self.coll.last = [obj]
 
-    def reset(self):
-        self.delay = Time.get()
-        self.rect = self.init_rect.copy()
-        self.speed, self.dx, self.dy, self.radian = 5, 0, 0, random_radian()
-        self.coll.clear(ALL)
+    def reset(self):  # 장외 아웃
+        if len(Ball.s) >= 2:
+            self.kill()
+        else:
+            self.delay = Time.get()
+            self.rect = self.init_rect.copy()
+            self.dx, self.dy = 0, 0
+            self.speed, self.radian = 5, random_radian()
+            self.coll.all_clear()
 
     def after_coll(self, obj):
-        super().after_coll(obj)
         if obj.clsname('Paddle') or obj.clsname('Wall'):
             self.bounce(obj)
+        super().after_coll(obj)
 
 
 class Paddle(Obj):
@@ -154,25 +164,26 @@ class Paddle(Obj):
             self.dy = self.speed
 
     def after_coll(self, obj):
-        super().after_coll(obj)
-
         if obj.clsname('Wall'):
             if obj.name == TOP:
                 self.rect.top = obj.rect.bottom
             elif obj.name == BOTTOM:
                 self.rect.bottom = obj.rect.top
+        super().after_coll(obj)
 
     def apply_dxdy(self):
         super().apply_dxdy()
-        item_replace_all(self.move_log, False)
+        replace_items(self.move_log, False)
 
 
 class Player(Paddle):
     s = None
+    copied = 0
 
 
 class Rival(Paddle):
     s = None
+    copied = 0
     hard_mode = False
 
     def update(self):
@@ -197,15 +208,56 @@ class Rival(Paddle):
 class Skill(Obj):
     s = None
     sprite = {}
+    copied = 0
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
-        self.is_available, self.is_pushed = True, False
+        self.state = {PUSH: False, AVAILABLE: True}
+
+    def update(self):
+        super().update()
+        if batch(True, ALL, self.state):
+            if self.name == 'z':
+                self.boost_ball()
+            elif self.name == 'x':
+                self.triple_ball()
+            elif self.name == 'c':
+                self.revive_ball()
+
+    def boost_ball(self):
+        colls = pg.sprite.groupcollide(Player.s, Ball.s, False, False)
+        if colls:
+            for player, ball in colls.items():
+                ball = ball[0]  # [*obj] 꼴로 출력되기 때문
+                ball.speed *= 5
+            self.state[AVAILABLE] = False
+            self.set_sprite('off_push')
+
+    def triple_ball(self):
+        ball = Ball.get()
+        if Time.get() - ball.delay > 100:
+            ball2 = Ball('ball', ball.rect.center, CENTER)
+            ball3 = Ball('ball', ball.rect.center, CENTER)
+
+            ball2.delay = ball3.delay = Time.get(-100)
+            ball2.speed = ball3.speed = ball.speed
+            ball2.radian = ball.radian + math.pi / 6
+            ball3.radian = ball.radian - math.pi / 6
+
+            self.state[AVAILABLE] = False
+            self.set_sprite('off_push')
+
+    def revive_ball(self):
+        player, ball = Player.get(), Ball.get()
+        if left_right(player.rect.topright, ball.rect.topleft):
+            ball.radian = math.pi
+            self.state[AVAILABLE] = False
+            self.set_sprite('off_push')
 
     def push(self):
-        if not self.is_pushed:
-            self.is_pushed = True
-            self.set_sprite('on')
+        if not self.state[PUSH]:
+            replace_items(self.state, True)
+            self.set_sprite('on_push')
 
 
 class Score:
@@ -222,6 +274,11 @@ class Score:
     def plus(cls, obj_name, score=1):
         cls.s[obj_name] += score
         cls.win_check()
+
+        for skill in Skill.s.sprites():  # 이미 눌린 스킬 버튼 무효화
+            if skill.state[PUSH]:
+                skill.state[AVAILABLE] = False
+                skill.set_sprite('off_push')
 
     @classmethod
     def win_check(cls):

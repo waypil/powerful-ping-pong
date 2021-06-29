@@ -5,6 +5,8 @@
 FPS = 100
 TILE_LENGTH = 40  # 타일 한 변의 길이
 
+COLLISION_CHECK_EXCEPTION = ('Background', 'Skill')
+
 
 #
 
@@ -29,7 +31,9 @@ UP, DOWN, LEFT, RIGHT, JUMP = 'up', 'down', 'left', 'right', 'jump'
 STOP, VERT, HRZN, DIAG, FREE = 'stop', 'vert', 'hrzn', 'diag', 'free'
 
 # Switch / Status / Precessing
-ON, READY, RUNNING, WAITING, OFF = 'on', 'ready', 'running', 'waiting', 'off'
+ON, READY, ACTIVE, DONE, OFF = 'on', 'ready', 'active', 'done', 'off'
+AVAILABLE, RUNNING, WAITING = 'available', 'running', 'waiting'
+PUSH, UNPUSH = 'push', 'unpush'  # 문법적으로 어긋나나 직관성을 우선
 
 # Rect / Position / Location
 TOP, BOTTOM = 'top', 'bottom'  # +LEFT, +RIGHT

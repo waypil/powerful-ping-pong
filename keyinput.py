@@ -1,4 +1,4 @@
-""" Project PPP v0.1.5 """
+""" Project PPP v0.2.0 """
 
 import sys
 from object import *
@@ -52,15 +52,15 @@ class Keyinput:
             if event.key == pg.K_F11:  # F11 누르면 전체화면/창모드 전환
                 Screen.update_resolution()
 
-            if event.key == pg.K_z:
+            if event.key in [pg.K_z, pg.K_KP1]:
                 if SYS.mode('GAME'):
                     Skill.get('z').push()
 
-            if event.key == pg.K_x:
+            if event.key in [pg.K_x, pg.K_KP2]:
                 if SYS.mode('GAME'):
                     Skill.get('x').push()
 
-            if event.key == pg.K_c:
+            if event.key in [pg.K_c, pg.K_KP3]:
                 if SYS.mode('GAME'):
                     Skill.get('c').push()
 
