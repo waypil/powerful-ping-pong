@@ -1,12 +1,10 @@
-""" Tools others """
+""" Tools consist of single function """
 
+import csv
 import math  # Mathtools
 import random  # Randomtools
 
 from data._bios import *
-
-
-""" Recttools: Tools for pg.Rect, pixels, hitbox """
 
 
 def get_subclasses(superclass, get_supers=False, get_subs=True):
@@ -29,6 +27,19 @@ def group(*groups: pg.sprite.Group) -> pg.sprite.Group():
 def check_method_exists(instance, method: str):
     # 입력된 method 이름이 객체에 있으면 True, 아닐 경우 False를 반환.
     return method in vars(instance.__class__)
+
+
+def load_csv(path, return_shape=True):
+    csv_file = open(path, 'r', encoding='utf-8-sig')
+    csv_iter = csv.reader(csv_file)
+    csv_array = [row for row in map(list, zip(*csv_iter))]
+    # 행열[y][x] → 열행[x][y] 변환 저장
+
+    if return_shape:  # array_shape
+        shape = (len(csv_array), len(csv_array[0]))
+        return csv_array, shape
+    else:
+        return csv_array
 
 
 #
