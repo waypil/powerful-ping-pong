@@ -3,7 +3,53 @@
 from data.importtools import *
 
 
-class Text:
+class Collision:
+    class CollisionInner:
+        def __init__(self):
+            self.coll_dict = {LEFT: [], RIGHT: [], TOP: [], BOTTOM: []}
+
+        def __call__(self):  # self.coll()
+            return self.coll_dict
+
+        def __getitem__(self, key):  # self.coll[]
+            return self.coll_dict[key]
+
+        def add(self, position: str, obj=None):
+            self.coll_dict[position].append(obj)
+
+        def clear(self, *positions):
+            if ALL in positions:
+                item_replace_all(self.coll_dict, [])
+            else:
+                for position in positions:
+                    self.last[position] = []
+
+        def clear_ex(self, *positions):
+            item_replace_all(self.coll_dict, [], *positions)
+
+    def __init__(self):
+        self.last = self.CollisionInner()
+        self.now = self.CollisionInner()
+
+    def add(self, position: str, obj=None):
+        self.last[position].append(obj)
+        self.now[position].append(obj)
+
+    def clear(self, *positions):
+        if ALL in positions:
+            item_replace_all(self.last(), [])
+            item_replace_all(self.now(), [])
+        else:
+            for position in positions:
+                self.last[position] = []
+                self.now[position] = []
+
+    def clear_ex(self, *positions):
+        item_replace_all(self.last(), [], *positions)
+        item_replace_all(self.now(), [], *positions)
+
+
+class Text:  # 편리성 개선 필요
     def __init__(self, fontname, size, color, xy: tuple, background=None,
                  antialias=True):
         self.size = size

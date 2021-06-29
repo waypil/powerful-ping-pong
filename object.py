@@ -1,4 +1,4 @@
-""" Project PPP v0.1.4 """
+""" Project PPP v0.1.5 """
 
 from data.clstools import *
 
@@ -34,7 +34,7 @@ class Obj(pg.sprite.Sprite):
 
         self.move_log = {LEFT: False, RIGHT: False, UP: False, DOWN: False,
                          STOP: False}
-        self.coll_log = {LEFT: False, RIGHT: False, TOP: False, BOTTOM: False}
+        self.coll = Collision()
 
         self.is_alive = True  # self.is_frozen = False
 
@@ -106,7 +106,7 @@ class Ball(Obj):
             self.reset()  # 초기 위치로 재배치
 
     def bounce(self, obj):  # 튕기기 함수.
-        if not self.coll_log[obj.name]:
+        if not self.coll.last[obj.name]:
             if obj.clsname('Paddle'):
                 if obj.move_log[UP]:
                     target_rect = rect_xy_copy(self.rect, dy=-obj.speed * 3)
@@ -121,14 +121,14 @@ class Ball(Obj):
                 self.radian = math.atan2(-self.dy, self.dx)
 
             self.speed += 0.3  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
-            self.coll_log[obj.name] = True
-            item_replace_all(self.coll_log, False, obj.name)
+            self.coll.last.add(obj.name, obj)
+            self.coll.last.clear_ex(obj.name)
 
     def reset(self):
         self.delay = Time.get()
         self.rect = self.init_rect.copy()
         self.speed, self.dx, self.dy, self.radian = 5, 0, 0, random_radian()
-        item_replace_all(self.coll_log, False)
+        self.coll.clear(ALL)
 
     def after_coll(self, obj):
         super().after_coll(obj)

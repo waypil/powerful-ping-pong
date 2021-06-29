@@ -1,4 +1,4 @@
-""" Project PPP v0.1.4 """
+""" Project PPP v0.1.5 """
 
 from keyinput import *
 
@@ -132,9 +132,10 @@ class Title(Game):
 class End(Game):
     def create(self):
         super().create()
-        Background(None)
+        Background('black')
+
         Wall(TOP, tl_px(2, 0), TOPLEFT)
-        Wall(BOTTOM, tl_px(2, 18), BOTTOMLEFT)
+        Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
 
     def draw(self):
         super().draw()

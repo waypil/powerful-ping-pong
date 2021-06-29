@@ -23,7 +23,6 @@ class Image:
 
         for key in list(keys):
             if type(sprite) is dict:
-                # print(sprite)
                 sprite = sprite[key] if key else sprite[self.defalut_subkey]
 
         return sprite
