@@ -216,48 +216,56 @@ class Skill(Obj):
 
     def update(self):
         super().update()
+        if self.name == 'x' and 'unpush' in self.imgkey:
+            self.on() if left_right(SYS.rect, Ball.get().rect) else self.off()
+
         if batch(True, ALL, self.state):
             if self.name == 'z':
-                self.boost_ball()
+                self.boost_ball(Player.s, Ball.s)
             elif self.name == 'x':
-                self.triple_ball()
+                self.triple_ball(Ball.get())
             elif self.name == 'c':
-                self.revive_ball()
+                self.revive_ball(Player.get(), Ball.get())
 
-    def boost_ball(self):
-        colls = pg.sprite.groupcollide(Player.s, Ball.s, False, False)
-        if colls:
+    def boost_ball(self, players: pg.sprite.Group, balls: pg.sprite.Group):
+        if colls := pg.sprite.groupcollide(players, balls, False, False):
             for player, ball in colls.items():
-                ball = ball[0]  # [*obj] 꼴로 출력되기 때문
-                ball.speed *= 5
-            self.state[AVAILABLE] = False
-            self.set_sprite('off_push')
+                ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
+            self.off()
 
-    def triple_ball(self):
-        ball = Ball.get()
+    def triple_ball(self, ball):
         if Time.get() - ball.delay > 100:
             ball2 = Ball('ball', ball.rect.center, CENTER)
             ball3 = Ball('ball', ball.rect.center, CENTER)
-
             ball2.delay = ball3.delay = Time.get(-100)
             ball2.speed = ball3.speed = ball.speed
-            ball2.radian = ball.radian + math.pi / 6
-            ball3.radian = ball.radian - math.pi / 6
+            ball2.radian = ball.radian + math.pi / 6  # 시계 반대 방향
+            ball3.radian = ball.radian - math.pi / 6  # 시계 방향
+            self.off()
 
-            self.state[AVAILABLE] = False
-            self.set_sprite('off_push')
-
-    def revive_ball(self):
-        player, ball = Player.get(), Ball.get()
+    def revive_ball(self, player, ball):
         if left_right(player.rect.topright, ball.rect.topleft):
             ball.radian = math.pi
-            self.state[AVAILABLE] = False
-            self.set_sprite('off_push')
+            self.off()
 
     def push(self):
-        if not self.state[PUSH]:
+        if self.state == {PUSH: False, AVAILABLE: True}:
             replace_items(self.state, True)
             self.set_sprite('on_push')
+
+    def on(self):
+        self.state[AVAILABLE] = True
+        if 'unpush' in self.imgkey:
+            self.set_sprite('on_unpush')
+        else:
+            self.set_sprite('on_push')
+
+    def off(self):
+        self.state[AVAILABLE] = False
+        if 'unpush' in self.imgkey:
+            self.set_sprite('off_unpush')
+        else:
+            self.set_sprite('off_push')
 
 
 class Score:
