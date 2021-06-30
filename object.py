@@ -12,13 +12,13 @@ class Obj(pg.sprite.Sprite):
     def get(cls, name=None):
         objs = cls.s.sprites()  # cls.s는 Obj.s가 아닌, self.__class__.s
         if name is None:
-            return cls.s.sprites()[0]
+            return objs[0]
         else:
             for obj in objs:
                 if obj.name == name:
                     return obj
         raise KeyError(f"{cls.__name__}의 '{name}' 객체가 존재하지 않습니다. "
-                       f"len({cls.__name__}.s) : {len(cls.s.sprites())}")
+                       f"len({cls.__name__}.s) : {len(objs)}")
 
     def __init__(self, name, xy: tuple = (0, 0), point=TOPLEFT):
         super().__init__()
