@@ -27,7 +27,7 @@ class Game:
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        self.set_attrs(), self.create()
+        self.set_sprite_groups(), self.create()
 
     def create(self):
         """객체(클래스 인스턴스)를 만드는 전용 공간. init() 안에 배치.
@@ -50,7 +50,7 @@ class Game:
         """
         self.init()
 
-        while SYS.mode() == self.name:
+        while SYS.mode(self.name):
             self.loop()
             fps.tick(FPS)
 
@@ -68,8 +68,11 @@ class Game:
         """
         Time.off()
 
-    def set_attrs(self, init=True):
+    def set_sprite_groups(self, init=True):
         """
+        Game.__init__에 obj들이 담길 pg.sprite.Group() 변수들을 만들고,
+        그 변수들을 각 class.s에 할당하는 기능.
+
         init=True: cls명에 따른 인스턴스 변수 양산, 그곳에 빈 Group() 할당.
                    첫 실행, 혹은 SYS.mode가 변경될 때(예: stage가 바뀔 때) 사용
         init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
