@@ -1,5 +1,7 @@
 """ Tools consist of methods of class """
 
+import numpy as np
+
 from data.functools import *
 
 
@@ -200,7 +202,8 @@ class Image:
         self.sprite = {}
         self.folder_name = class_name.lower()
         self.path = f"./resources/images/{self.folder_name}"
-        self.defalut_subkey = ''
+        self.subkeys = {}
+        self.defalut_imgkey = ''
 
         self.create_sprite_dict()
 
@@ -210,9 +213,9 @@ class Image:
     def __getitem__(self, keys):
         sprite = self.sprite
 
-        for key in list(keys):
+        for key in list_(keys):
             if type(sprite) is dict:
-                sprite = sprite[key] if key else sprite[self.defalut_subkey]
+                sprite = sprite[key] if key else sprite[self.defalut_imgkey]
 
         return sprite
 
@@ -246,14 +249,32 @@ class Image:
 
             for tile_x in range(csv_size[0]):
                 for tile_y in range(csv_size[1]):
-                    x = tile_x * w
-                    y = tile_y * h
+                    x, y = tile_x * w, tile_y * h
 
                     code = csv_array[tile_x][tile_y]
                     if code.startswith('_'):  # '_abc' → 'abc'
-                        code = self.defalut_subkey = code[1:]
+                        code = self.defalut_imgkey = code[1:]
+                    if '|grayscale|' in code:  # '|grayscale|abc'
+                        code = code.split('|')[-1]
+                        img_sprt = grayscale(img_sprt)
 
-                    if name not in self.sprite:
+                    self.__save_subkeys(code)
+
+                    if name not in self.sprite:  # 덮어쓰기 버그 방지
                         self.sprite[name] = {}
 
                     self.sprite[name][code] = img_sprt.subsurface((x, y, w, h))
+    
+    def __save_subkeys(self, code: str):
+        for i, subkey in enumerate(code.split('_'), start=1):
+            if i not in self.subkeys:  # 덮어쓰기 버그 방지
+                self.subkeys[i] = []
+            append(self.subkeys[i], subkey)
+
+    @staticmethod
+    def grayscale(image):  # https://stackoverflow.com/a/10693616/15618166
+        arr = pg.surfarray.array3d(image)
+        avgs = [[(r * 0.298 + g * 0.587 + b * 0.114) for r, g, b in col]
+                for col in arr]
+        arr = np.array([[[avg, avg, avg] for avg in col] for col in avgs])
+        return pg.surfarray.make_surface(arr)

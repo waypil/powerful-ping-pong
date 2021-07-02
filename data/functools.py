@@ -7,7 +7,7 @@ import random  # Randomtools
 from data._bios import *
 
 
-def get_subclasses(superclass, get_supers=False, get_subs=True):
+def get_subclasses(superclass, get_supers=True, get_subs=True):
     subclass_list = []
     for sub_class in superclass.__subclasses__():
         if sub_class.__subclasses__():

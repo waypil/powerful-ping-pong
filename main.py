@@ -1,4 +1,4 @@
-""" Project PPP v0.2.0 """
+""" Project PPP v0.2.2 """
 
 from itertools import combinations  # 조합: collision_check()에서 사용
 
@@ -96,11 +96,8 @@ class Stage(Game):
         Ball('ball', SYS.rect.center, point=CENTER)
 
         Player(RIGHT, batch_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
-        Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
 
-        Skill('z', tl_px(20, 16), TOPLEFT)
-        Skill('x', tl_px(22, 16), TOPLEFT)
-        Skill('c', tl_px(24, 16), TOPLEFT)
+        Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
 
     def init(self):
         super().init()
@@ -168,7 +165,7 @@ def load_sprites_all():
     """'sprite' in subclass.__dict__ : 자신의 클래스만 탐색함.
     hasattr(subclass, 'sprite') :  superclass도 포함해서 탐색함.
     """
-    for subclass in get_subclasses(Obj, get_supers=True, get_subs=False):
+    for subclass in get_subclasses(Obj):
         if 'sprite' in subclass.__dict__ and not subclass.sprite:
             subclass.sprite = Image(subclass.__name__)
 

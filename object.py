@@ -1,4 +1,4 @@
-""" Project PPP v0.2.0 """
+""" Project PPP v0.2.2 """
 
 from data.clstools import *
 
@@ -20,18 +20,19 @@ class Obj(pg.sprite.Sprite):
         raise KeyError(f"{cls.__name__}의 '{name}' 객체가 존재하지 않습니다. "
                        f"len({cls.__name__}.s) : {len(objs)}")
 
-    def __init__(self, name, xy: tuple = (0, 0), point=TOPLEFT):
+    def __init__(self, name=None, xy: tuple = (0, 0), point=TOPLEFT):
         super().__init__()
         Obj.s.add(self), self.__class__.s.add(self)
         self.__class__.copied += 1
 
-        if name == self.clsname().lower():
-            self.name = self.__class__.copied
+        if name is None:
+            name = self.clsname().lower()
+            self.name = f'{name}_{self.__class__.copied}'
         else:
             self.name = name
 
         self.image = self.__class__.sprite[name, '']
-        self.imgkey = self.__class__.sprite.defalut_subkey
+        self.imgkey = self.__class__.sprite.defalut_imgkey
         self.rect = set_rect(self.image, xy, point=point)
 
         self.dx, self.dy, self.dxd, self.dyd = 0, 0, 0.0, 0.0
@@ -51,9 +52,26 @@ class Obj(pg.sprite.Sprite):
         else:
             return self.__class__.__name__
 
-    def set_sprite(self, imgkey=None):
-        if imgkey is not None:
-            self.imgkey = imgkey
+    def set_sprite(self, *keywords):
+        if keywords:
+            indexes = {}
+            new_imgkey = ''
+
+            for keyword in keywords:
+                for i, subkeys in self.__class__.sprite.subkeys.items():
+                    if keyword in subkeys:  # 유효한 키워드인지 검사
+                        indexes[i] = keyword
+
+            assert indexes, f"잘못된 키워드{keywords}가 입력되었습니다."
+
+            for i, self_subkey in enumerate(self.imgkey.split('_'), start=1):
+                if i in indexes:
+                    new_imgkey = f'{new_imgkey}_{indexes[i]}'
+                else:
+                    new_imgkey = f'{new_imgkey}_{self_subkey}'
+
+            self.imgkey = new_imgkey[1:]  # _foo_bar 꼴로 되어 있기 때문
+
         self.image = self.__class__.sprite[self.name][self.imgkey]
 
     def after_coll(self, obj):  # 자식 after_coll의 맨 아래에 배치할 것!
@@ -180,6 +198,15 @@ class Player(Paddle):
     s = None
     copied = 0
 
+    def __init__(self, name, xy: tuple, point):
+        super().__init__(name, xy, point)
+        self.skill = {}
+        self.init_skills(BoostBall, IncreaseBall, ReviveBall)
+
+    def init_skills(self, *skill_classes):
+        for i, skill_class in enumerate(skill_classes, start=1):
+            self.skill[i] = skill_class(tl_px(18 + i * 2, 16), TOPLEFT)
+
 
 class Rival(Paddle):
     s = None
@@ -205,69 +232,6 @@ class Rival(Paddle):
                 self.move(random.choice([UP, STOP]))
 
 
-class Skill(Obj):
-    s = None
-    sprite = {}
-    copied = 0
-
-    def __init__(self, name, xy: tuple, point):
-        super().__init__(name, xy, point)
-        self.state = {PUSH: False, AVAILABLE: True}
-
-    def update(self):
-        super().update()
-        if self.name == 'x' and 'unpush' in self.imgkey:
-            self.on() if left_right(SYS.rect, Ball.get().rect) else self.off()
-
-        if batch(True, ALL, self.state):
-            if self.name == 'z':
-                self.boost_ball(Player.s, Ball.s)
-            elif self.name == 'x':
-                self.triple_ball(Ball.get())
-            elif self.name == 'c':
-                self.revive_ball(Player.get(), Ball.get())
-
-    def boost_ball(self, players: pg.sprite.Group, balls: pg.sprite.Group):
-        if colls := pg.sprite.groupcollide(players, balls, False, False):
-            for player, ball in colls.items():
-                ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
-            self.off()
-
-    def triple_ball(self, ball):
-        if Time.get() - ball.delay > 100:
-            ball2 = Ball('ball', ball.rect.center, CENTER)
-            ball3 = Ball('ball', ball.rect.center, CENTER)
-            ball2.delay = ball3.delay = Time.get(-100)
-            ball2.speed = ball3.speed = ball.speed
-            ball2.radian = ball.radian + math.pi / 6  # 시계 반대 방향
-            ball3.radian = ball.radian - math.pi / 6  # 시계 방향
-            self.off()
-
-    def revive_ball(self, player, ball):
-        if left_right(player.rect.topright, ball.rect.topleft):
-            ball.radian = math.pi
-            self.off()
-
-    def push(self):
-        if self.state == {PUSH: False, AVAILABLE: True}:
-            replace_items(self.state, True)
-            self.set_sprite('on_push')
-
-    def on(self):
-        self.state[AVAILABLE] = True
-        if 'unpush' in self.imgkey:
-            self.set_sprite('on_unpush')
-        else:
-            self.set_sprite('on_push')
-
-    def off(self):
-        self.state[AVAILABLE] = False
-        if 'unpush' in self.imgkey:
-            self.set_sprite('off_unpush')
-        else:
-            self.set_sprite('off_push')
-
-
 class Score:
     font_l = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(8, 0))
     font_r = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(23, 0))
@@ -282,11 +246,6 @@ class Score:
     def plus(cls, obj_name, score=1):
         cls.s[obj_name] += score
         cls.win_check()
-
-        for skill in Skill.s.sprites():  # 이미 눌린 스킬 버튼 무효화
-            if skill.state[PUSH]:
-                skill.state[AVAILABLE] = False
-                skill.set_sprite('off_push')
 
     @classmethod
     def win_check(cls):
@@ -305,3 +264,97 @@ class Score:
             cls.s = {LEFT: 0, RIGHT: 0}
         if reset_win:
             cls.win = False
+
+
+class Skill(Obj):
+    sprite = {}
+
+    @classmethod
+    def reset_buttons(cls):  # 현재 사용하지 않음
+        for subclass in get_subclasses(cls, get_supers=True):
+            for skill in subclass.s:
+                skill.state = ON
+                skill.set_sprite(ON)
+
+    def __init__(self, xy: tuple, point):
+        super().__init__(self.clsname().lower(), xy, point)
+        # self.antimash = Framewatch('ANTI-MASHING', min_sec=10)
+        self.state = ON  # ON, RUNNING, OFF
+
+    def update(self):
+        super().update()
+        if self.state == RUNNING:
+            self.invoke()
+
+    def button(self, force_state=''):
+        assert force_state in ['', ON, RUNNING, OFF]
+
+        if force_state:
+            self.state = force_state
+        elif self.state == ON:
+            self.state = RUNNING
+
+        self.set_sprite(self.state)
+
+    def invoke(self):  # 스킬 발동 (자식 class의 맨 마지막 줄에 배치할 것!)
+        self.button(OFF)
+
+
+class BoostBall(Skill):
+    s = None
+    copied = 0
+
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.players, self.balls = Player.s, Ball.s
+
+    def invoke(self):
+        colls = pg.sprite.groupcollide(self.players, self.balls, False, False)
+        if colls:
+            for player, ball in colls.items():
+                ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
+            super().invoke()
+
+
+class IncreaseBall(Skill):  # obj 증식
+    s = None
+    copied = 0
+
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.ball = None
+
+    def update(self):
+        self.ball = Ball.get()
+        super().update()
+
+    def invoke(self):
+        if left_right(SYS.rect.center, self.ball.rect.center) and \
+                Time.get(-self.ball.delay) > 100:
+            ball2 = Ball('ball', self.ball.rect.center, CENTER)
+            ball3 = Ball('ball', self.ball.rect.center, CENTER)
+            ball2.delay = ball3.delay = Time.get(-100)
+            ball2.speed = ball3.speed = self.ball.speed
+            ball2.radian = self.ball.radian + math.pi / 6  # 시계 반대 방향
+            ball3.radian = self.ball.radian - math.pi / 6  # 시계 방향
+            super().invoke()
+        else:  # if self.state == RUNNING:
+            self.button(ON)
+
+
+class ReviveBall(Skill):  # 공 부활
+    s = None
+    copied = 0
+
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.player, self.ball = None, None
+
+    def update(self):
+        self.player, self.ball = Player.get(), Ball.get()
+        super().update()
+
+    def invoke(self):  # 스킬 발동
+        if left_right(self.player.rect.right, self.ball.rect.left):
+            self.ball.radian = math.pi  # 왼쪽 수직 방향
+            super().invoke()

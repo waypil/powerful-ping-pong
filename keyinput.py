@@ -1,4 +1,4 @@
-""" Project PPP v0.2.0 """
+""" Project PPP v0.2.2 """
 
 import sys
 from object import *
@@ -54,15 +54,15 @@ class Keyinput:
 
             if event.key in [pg.K_z, pg.K_KP1]:
                 if SYS.mode('GAME'):
-                    Skill.get('z').push()
+                    Player.get().skill[1].button()
 
             if event.key in [pg.K_x, pg.K_KP2]:
                 if SYS.mode('GAME'):
-                    Skill.get('x').push()
+                    Player.get().skill[2].button()
 
             if event.key in [pg.K_c, pg.K_KP3]:
                 if SYS.mode('GAME'):
-                    Skill.get('c').push()
+                    Player.get().skill[3].button()
 
         elif event.type == KEYUP:
             if event.key == pg.K_ESCAPE:  # ESC 누르면 게임 종료
