@@ -41,6 +41,12 @@ TOPLEFT, BOTTOMLEFT, TOPRIGHT, BOTTOMRIGHT = 'tl', 'bl', 'tr', 'br'
 MIDTOP, MIDLEFT, MIDBOTTOM, MIDRIGHT = 'mt', 'ml', 'mb', 'mr'
 CENTER, CENTERX, CENTERY = 'center', 'centerx', 'centery'
 
+# Mouse
+CLICK_LEFT_DOWN, CLICK_LEFT_UP = 'click_left_down', 'click_left_up'
+CLICK_MIDDLE_DOWN, CLICK_MIDDLE_UP = 'click_middle_down', 'click_middle_up'
+CLICK_RIGHT_DOWN, CLICK_RIGHT_UP = 'click_right_down', 'click_right_up'
+WHEEL_UP, WHEEL_DOWN, NOTHING = 'wheel_up', 'wheel_down', 'nothing'  # +None
+
 
 #
 

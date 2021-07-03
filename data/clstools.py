@@ -1,7 +1,5 @@
 """ Tools consist of methods of class """
 
-import numpy as np
-
 from data.functools import *
 
 
@@ -202,6 +200,8 @@ class Image:
         self.sprite = {}
         self.folder_name = class_name.lower()
         self.path = f"./resources/images/{self.folder_name}"
+
+        self.names = []
         self.subkeys = {}
         self.defalut_imgkey = ''
 
@@ -237,6 +237,7 @@ class Image:
         for img_name in img_names:
             img_sprt = pg.image.load(f"{self.path}/{img_name}").convert_alpha()
             name, _extension_ = img_name.split('.')  # 이름, 확장자(png)
+            self.__save_filename(name)
             self.sprite[name] = img_sprt
 
     def __divide_sprites_process(self, img_names, csv_array, csv_size):
@@ -244,6 +245,7 @@ class Image:
             img_sprt = pg.image.load(f"{self.path}/{img_name}").convert_alpha()
             img_rect = img_sprt.get_rect()
             name, _extension_ = img_name.split('.')  # 이름, 확장자(png)
+            self.__save_filename(name)
 
             w, h = img_rect.w // csv_size[0], img_rect.h // csv_size[1]
 
@@ -256,15 +258,19 @@ class Image:
                         code = self.defalut_imgkey = code[1:]
                     if '|grayscale|' in code:  # '|grayscale|abc'
                         code = code.split('|')[-1]
-                        img_sprt = grayscale(img_sprt)
-
+                        img_sprt = self.grayscale(img_sprt)
                     self.__save_subkeys(code)
 
                     if name not in self.sprite:  # 덮어쓰기 버그 방지
                         self.sprite[name] = {}
 
                     self.sprite[name][code] = img_sprt.subsurface((x, y, w, h))
-    
+
+    def __save_filename(self, name: str):
+        if 0 not in self.subkeys:  # 덮어쓰기 버그 방지
+            self.subkeys[0] = []
+        append(self.subkeys[0], name)
+
     def __save_subkeys(self, code: str):
         for i, subkey in enumerate(code.split('_'), start=1):
             if i not in self.subkeys:  # 덮어쓰기 버그 방지

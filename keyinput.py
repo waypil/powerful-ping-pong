@@ -1,4 +1,4 @@
-""" Project PPP v0.2.2 """
+""" Project PPP v0.3.0 """
 
 import sys
 from object import *
@@ -11,9 +11,11 @@ class Keyinput:
     def update(cls):
         """키 설정
         """
+        Mouse.pos = pg.mouse.get_pos()  # 마우스 커서 좌표 할당
+
         cls.input_keep(pg.key.get_pressed())
 
-        for event in pg.event.get():
+        for event in [None, *pg.event.get()]:
             cls.input_once(event)
 
     @classmethod
@@ -22,11 +24,11 @@ class Keyinput:
         """
         if key[pg.K_UP] or key[pg.K_w]:
             if SYS.mode('GAME'):
-                Player.get(RIGHT).move(UP)
+                Player.get().move(UP)
 
         if key[pg.K_DOWN] or key[pg.K_s]:
             if SYS.mode('GAME'):
-                Player.get(RIGHT).move(DOWN)
+                Player.get().move(DOWN)
 
         if key[pg.K_LEFT] or key[pg.K_a]:
             pass
@@ -36,8 +38,10 @@ class Keyinput:
 
         if pg.mouse.get_pressed(num_buttons=3)[0]:
             pass
+
         if pg.mouse.get_pressed(num_buttons=3)[1]:
             pass
+
         if pg.mouse.get_pressed(num_buttons=3)[2]:
             pass
 
@@ -45,10 +49,13 @@ class Keyinput:
     def input_once(cls, event):
         """키 설정
         """
-        if event.type == QUIT:  # [x]를 클릭하면 게임 종료
+        if event is None:
+            Mouse.event = None
+
+        elif event.type == QUIT:  # [x]를 클릭하면 게임 종료
             pg.quit(), sys.exit()
 
-        if event.type == KEYDOWN:
+        elif event.type == KEYDOWN:
             if event.key == pg.K_F11:  # F11 누르면 전체화면/창모드 전환
                 Screen.update_resolution()
 
@@ -69,24 +76,31 @@ class Keyinput:
                 pg.quit(), sys.exit()
 
             if event.key == pg.K_RETURN:
-                if SYS.mode('TITLE', 'END'):
+                if SYS.mode('TITLE', 'END') and Player.saves:
                     SYS.mode_change('GAME')  # ENTER 누르면 게임 시작
 
-        elif event.type == MOUSEBUTTONUP:
-            pass
-
         elif event.type == MOUSEBUTTONDOWN:
-            if event.button == 1 and cls.__Lclick.check():  # click Left
-                pass
+            if event.button == 1:  # click Left
+                Mouse.event = CLICK_LEFT_DOWN
 
             elif event.button == 2:  # click Middle
-                pass
+                Mouse.event = CLICK_MIDDLE_DOWN
 
             elif event.button == 3:  # click Right
-                pass
+                Mouse.event = CLICK_RIGHT_DOWN
 
             elif event.button >= 4 and event.button % 2 == 0:  # wheel UP
-                pass
+                Mouse.event = WHEEL_UP
 
             elif event.button >= 5 and event.button % 2 == 1:  # wheel DOWN
-                pass
+                Mouse.event = WHEEL_DOWN
+
+        elif event.type == MOUSEBUTTONUP:
+            if event.button == 1:  # click Left
+                Mouse.event = CLICK_LEFT_UP
+
+            elif event.button == 2:  # click Middle
+                Mouse.event = CLICK_MIDDLE_UP
+
+            elif event.button == 3:  # click Right
+                Mouse.event = CLICK_RIGHT_UP

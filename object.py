@@ -1,4 +1,4 @@
-""" Project PPP v0.2.2 """
+""" Project PPP v0.3.0 """
 
 from data.clstools import *
 
@@ -7,6 +7,7 @@ class Obj(pg.sprite.Sprite):
     """모든 객체의 틀.
     """
     s = None
+    invisibles = None
 
     @classmethod
     def get(cls, name=None):
@@ -20,19 +21,24 @@ class Obj(pg.sprite.Sprite):
         raise KeyError(f"{cls.__name__}의 '{name}' 객체가 존재하지 않습니다. "
                        f"len({cls.__name__}.s) : {len(objs)}")
 
-    def __init__(self, name=None, xy: tuple = (0, 0), point=TOPLEFT):
+    def __init__(self, name, xy: tuple = (0, 0), point=TOPLEFT):
         super().__init__()
         Obj.s.add(self), self.__class__.s.add(self)
         self.__class__.copied += 1
 
         if name is None:
             name = self.clsname().lower()
-            self.name = f'{name}_{self.__class__.copied}'
+            self.name, subkeys = f'{name}_{self.__class__.copied}', ''
+            self.imgkey = self.__class__.sprite.defalut_imgkey
+        elif type(name) in [list, tuple]:
+            self.name, subkeys = name[0], name[1:]
+            self.imgkey = '_'.join(subkeys)
         else:
-            self.name = name
+            self.name, subkeys = name, ''
+            self.imgkey = self.__class__.sprite.defalut_imgkey
 
-        self.image = self.__class__.sprite[name, '']
-        self.imgkey = self.__class__.sprite.defalut_imgkey
+        self.image = self.__class__.sprite[name, subkeys]
+
         self.rect = set_rect(self.image, xy, point=point)
 
         self.dx, self.dy, self.dxd, self.dyd = 0, 0, 0.0, 0.0
@@ -42,6 +48,22 @@ class Obj(pg.sprite.Sprite):
         self.coll = Collision()
 
         self.is_alive = True  # self.is_frozen = False
+
+    def update(self):
+        if self.is_alive:
+            super().update()
+
+    def save_settings_download(self):  # 저장된 세팅이 있을 경우
+        if 'saves' in self.__class__.__dict__ and self.__class__.saves:
+            loaded_name = self.__class__.saves['name']
+            loaded_imgkey = self.__class__.saves['imgkey']
+            self.set_sprite(loaded_name, loaded_imgkey)
+
+    def hide(self, make_sprite_invisible: bool = True):
+        if make_sprite_invisible:
+            self.kill(), self.__class__.invisibles.add(self)
+        else:  # make sprite visible
+            self.kill(), Obj.s.add(self), self.__class__.s.add(self)
 
     def clsname(self, compare_name=''):  # class name
         if compare_name:
@@ -56,16 +78,30 @@ class Obj(pg.sprite.Sprite):
         if keywords:
             indexes = {}
             new_imgkey = ''
+            new_keywords = []
 
             for keyword in keywords:
+                if keyword is None:
+                    new_keywords.append(None)
+                else:
+                    new_keywords.append(keyword.split('_'))
+
+            for keyword in list_(new_keywords):
                 for i, subkeys in self.__class__.sprite.subkeys.items():
                     if keyword in subkeys:  # 유효한 키워드인지 검사
                         indexes[i] = keyword
+                    elif keyword is None:
+                        self.hide()
 
             assert indexes, f"잘못된 키워드{keywords}가 입력되었습니다."
 
-            for i, self_subkey in enumerate(self.imgkey.split('_'), start=1):
-                if i in indexes:
+            for i, self_subkey in enumerate(
+                    [self.name, *self.imgkey.split('_')]):
+
+                if i == 0:
+                    if i in indexes:
+                        self.name = indexes[i]
+                elif i in indexes:
                     new_imgkey = f'{new_imgkey}_{indexes[i]}'
                 else:
                     new_imgkey = f'{new_imgkey}_{self_subkey}'
@@ -73,6 +109,9 @@ class Obj(pg.sprite.Sprite):
             self.imgkey = new_imgkey[1:]  # _foo_bar 꼴로 되어 있기 때문
 
         self.image = self.__class__.sprite[self.name][self.imgkey]
+
+    def sprite_is(self, *subkey):
+        return batch(list_(subkey), AND, self.imgkey.split('_'))
 
     def after_coll(self, obj):  # 자식 after_coll의 맨 아래에 배치할 것!
         self.coll.all_add(obj)
@@ -91,6 +130,12 @@ class Obj(pg.sprite.Sprite):
 
 
 class Background(Obj):
+    s = None
+    sprite = {}
+    copied = 0
+
+
+class Decoration(Obj):
     s = None
     sprite = {}
     copied = 0
@@ -166,9 +211,12 @@ class Ball(Obj):
 
 class Paddle(Obj):
     sprite = {}
+    pos = {LEFT: [(tl_px(3), SYS.rect.centery), MIDLEFT],
+           RIGHT: [matrix(SYS.rect.midright, '+', tl_px(-3, 0)), MIDRIGHT]}
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
+        self.save_settings_download()
         self.speed = 5  # default
 
     def move(self, command):
@@ -197,21 +245,33 @@ class Paddle(Obj):
 class Player(Paddle):
     s = None
     copied = 0
+    saves = {}
 
-    def __init__(self, name, xy: tuple, point):
-        super().__init__(name, xy, point)
+    def __init__(self):
+        super().__init__('gray', (0, 0), TOPLEFT)
+        xy, point = self.__class__.pos[self.__class__.saves['name']]
+        self.rect = set_rect(self.image, xy, point=point)
         self.skill = {}
         self.init_skills(BoostBall, IncreaseBall, ReviveBall)
 
     def init_skills(self, *skill_classes):
         for i, skill_class in enumerate(skill_classes, start=1):
-            self.skill[i] = skill_class(tl_px(18 + i * 2, 16), TOPLEFT)
+            if self.sprite_is(LEFT):
+                self.skill[i] = skill_class(tl_px(4 + i * 2, 16), TOPLEFT)
+            else:  # RIGHT
+                self.skill[i] = skill_class(tl_px(18 + i * 2, 16), TOPLEFT)
 
 
 class Rival(Paddle):
     s = None
     copied = 0
+    saves = {}
     hard_mode = False
+
+    def __init__(self):
+        super().__init__('gray', (0, 0), TOPLEFT)
+        xy, point = self.__class__.pos[self.__class__.saves['name']]
+        self.rect = set_rect(self.image, xy, point=point)
 
     def update(self):
         self.move_auto()
@@ -232,11 +292,22 @@ class Rival(Paddle):
                 self.move(random.choice([UP, STOP]))
 
 
+class PaddleSample(Paddle):
+    s = None
+    copied = 0
+
+    def update(self):
+        super().update()
+        for button_lr in ButtonSelectLR.s.sprites():
+            if self.imgkey == button_lr.name:
+                self.set_sprite(button_lr.imgkey.split('_')[0])  # color
+
+
 class Score:
     font_l = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(8, 0))
     font_r = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(23, 0))
     win = None
-    win_score = 5
+    win_score = 1
 
     @classmethod
     def draw(cls):
@@ -250,9 +321,15 @@ class Score:
     @classmethod
     def win_check(cls):
         if cls.s[LEFT] >= cls.win_score:
-            cls.win = LEFT
+            if Player.get().sprite_is(LEFT):
+                cls.win = {'Player', LEFT}
+            else:
+                cls.win = {'Rival', LEFT}
         elif cls.s[RIGHT] >= cls.win_score:
-            cls.win = RIGHT
+            if Player.get().sprite_is(RIGHT):
+                cls.win = {'Player', RIGHT}
+            else:
+                cls.win = {'Rival', RIGHT}
 
         if cls.win:
             Ball.get().remove(Obj.s)  # Obj.s.remove(Ball.get())와 동일
@@ -264,6 +341,64 @@ class Score:
             cls.s = {LEFT: 0, RIGHT: 0}
         if reset_win:
             cls.win = False
+
+
+class Button(Obj):
+    s = None
+    sprite = {}
+    copied = 0
+
+    def update(self):
+        super().update()
+        if bool(self.rect.collidepoint(Mouse.pos)):
+            if Mouse.event == CLICK_LEFT_DOWN:
+                self.set_sprite(PUSH)
+
+    def button(self, state):
+        assert state in ['gray', 'red', 'blue', PUSH, UNPUSH]
+        self.set_sprite(state)
+
+
+class ButtonSelectColor(Button):
+    s = None
+    copied = 0
+
+
+class ButtonSelectLR(Button):
+    s = None
+    copied = 0
+
+    def __init__(self, name, xy: tuple, point):
+        super().__init__(name, xy, point)
+        red_pos = matrix(xy, '+', tl_px(0.5, -1))
+        blue_pos = matrix(red_pos, '+', tl_px(2, 0))
+        self.red = Button(['color', 'red_unpush'], red_pos, TOPLEFT)
+        self.blue = Button(['color', 'blue_unpush'], blue_pos, TOPLEFT)
+        self.red.hide(), self.blue.hide()
+
+    def update(self):
+        super().update()
+        if self.sprite_is(PUSH):
+            self.red.hide(False), self.blue.hide(False)
+        else:  # self.sprite_is(UNPUSH)
+            self.red.hide(), self.blue.hide()
+
+        if self.red.sprite_is(PUSH):
+            self.set_sprite('red')
+            self.red.set_sprite(UNPUSH, None), self.blue.set_sprite(UNPUSH)
+        elif self.blue.sprite_is(PUSH):
+            self.set_sprite('blue')
+            self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, None)
+
+        if self.name == LEFT and self.sprite_is(PUSH):
+            self.__class__.get(RIGHT).set_sprite(UNPUSH)
+        elif self.name == RIGHT and self.sprite_is(PUSH):
+            self.__class__.get(LEFT).set_sprite(UNPUSH)
+
+        if self.sprite_is(PUSH):  # setting upload
+            Player.saves = {'name': self.name, 'imgkey': self.imgkey}
+        else:  # UNPUSH
+            Rival.saves = {'name': self.name, 'imgkey': self.imgkey}
 
 
 class Skill(Obj):
@@ -322,15 +457,19 @@ class IncreaseBall(Skill):  # obj 증식
 
     def __init__(self, xy: tuple, point):
         super().__init__(xy, point)
-        self.ball = None
+        self.player, self.ball = None, None
 
     def update(self):
-        self.ball = Ball.get()
+        self.player, self.ball = Player.get(), Ball.get()
         super().update()
 
     def invoke(self):
-        if left_right(SYS.rect.center, self.ball.rect.center) and \
-                Time.get(-self.ball.delay) > 100:
+        if self.player.sprite_is(LEFT):
+            invocable_area = left_right(self.ball.rect.center, SYS.rect.center)
+        else:  # RIGHT
+            invocable_area = left_right(SYS.rect.center, self.ball.rect.center)
+
+        if invocable_area and Time.get(-self.ball.delay) > 100:
             ball2 = Ball('ball', self.ball.rect.center, CENTER)
             ball3 = Ball('ball', self.ball.rect.center, CENTER)
             ball2.delay = ball3.delay = Time.get(-100)
@@ -355,6 +494,11 @@ class ReviveBall(Skill):  # 공 부활
         super().update()
 
     def invoke(self):  # 스킬 발동
-        if left_right(self.player.rect.right, self.ball.rect.left):
-            self.ball.radian = math.pi  # 왼쪽 수직 방향
-            super().invoke()
+        if self.player.sprite_is(LEFT):
+            if left_right(self.ball.rect.right, self.player.rect.left):
+                self.ball.radian = 0  # 오른쪽 수직 방향
+                super().invoke()
+        else:  # RIGHT
+            if left_right(self.player.rect.right, self.ball.rect.left):
+                self.ball.radian = math.pi  # 왼쪽 수직 방향
+                super().invoke()

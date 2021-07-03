@@ -38,6 +38,15 @@ class SYS:
             cls.__mode_temp = None
 
 
+class Mouse:
+    event = None
+    pos = (0, 0)
+
+
+# class Key:
+#     event = None
+
+
 class Screen:
     rect = None  # x, y값은 항상 0으로 고정해야 하며, 절대 변경하면 안 됨.
     on = None

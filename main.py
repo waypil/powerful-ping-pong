@@ -1,4 +1,4 @@
-""" Project PPP v0.2.2 """
+""" Project PPP v0.3.0 """
 
 from itertools import combinations  # 조합: collision_check()에서 사용
 
@@ -11,9 +11,9 @@ main > keyinput > object > /data/: clstools > functools > _bios > _constants
 
 
 class Game:
-    font_big = Text('GenShinGothic-Monospace-Bold', 120, CYAN, tl_px(2.5, 4),
+    font_big = Text('GenShinGothic-Monospace-Bold', 120, CYAN, tl_px(2.5, 1),
                     BLACK)
-    font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, tl_px(9.5, 13),
+    font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, tl_px(2, 13),
                 BLACK)
 
     @classmethod
@@ -66,11 +66,12 @@ class Game:
     def off(self):
         """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
+        self.set_sprite_groups()
         Time.off()
 
     def set_sprite_groups(self, init=True):
         """
-        Game.__init__에 obj들이 담길 pg.sprite.Group() 변수들을 만들고,
+        Game.__init__ 안에 obj들이 담길 pg.sprite.Group() 변수들을 만들고,
         그 변수들을 각 class.s에 할당하는 기능.
 
         init=True: cls명에 따른 인스턴스 변수 양산, 그곳에 빈 Group() 할당.
@@ -82,7 +83,26 @@ class Game:
             attr_name = f'{subclass.__name__.lower()}s'
             if init:
                 setattr(self, attr_name, pg.sprite.Group())
-            subclass.s = getattr(self, attr_name)
+            subclass.s = getattr(self, attr_name)  # object.py에 전달
+        Obj.invisibles = pg.sprite.Group()
+
+
+class Title(Game):
+    def create(self):
+        super().create()
+        Decoration('sample_field', tl_px(18, 9), TOPLEFT)
+        ButtonSelectLR(LEFT, tl_px(19, 7), TOPLEFT)
+        ButtonSelectLR(RIGHT, tl_px(25, 7), TOPLEFT)
+        PaddleSample(['gray', 'left'], tl_px(19, 12), TOPLEFT)
+        PaddleSample(['gray', 'right'], tl_px(29, 12), TOPRIGHT)
+
+    def draw(self):
+        super().draw()
+        Game.font_big.write("Powerful Ping-Pong")
+        if Player.saves:
+            Game.font.write(" PRESS ENTER TO START GAME.")
+        else:
+            Game.font.write("SELECT LEFT/RIGHT AND COLOR.")
 
 
 class Stage(Game):
@@ -95,9 +115,7 @@ class Stage(Game):
 
         Ball('ball', SYS.rect.center, point=CENTER)
 
-        Player(RIGHT, batch_cal(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT)
-
-        Rival(LEFT, (tl_px(3), SYS.rect.centery), MIDLEFT)
+        Player(), Rival()
 
     def init(self):
         super().init()
@@ -127,13 +145,6 @@ class Stage(Game):
             obj.apply_dxdy()
 
 
-class Title(Game):
-    def draw(self):
-        super().draw()
-        Game.font_big.write("Powerful Ping-Pong")
-        Game.font.write("PRESS ENTER TO START GAME.")
-
-
 class End(Game):
     def create(self):
         super().create()
@@ -146,19 +157,20 @@ class End(Game):
         super().draw()
         Score.draw()
 
-        if Score.win == LEFT:
+        if LEFT in Score.win:
             Game.font_big.write("WIN", tl_px(6.5, 4))
             Game.font_big.write("LOSE", tl_px(20, 4))
-            Game.font.write("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
-            Rival.hard_mode = False
-        elif Score.win == RIGHT:
-            Game.font_big.write("LOSE", tl_px(6, 4))
-            Game.font_big.write("WIN", tl_px(20.5, 4))
+        elif RIGHT in Score.win:
+            Game.font_big.write("WIN", tl_px(6.5, 4))
+            Game.font_big.write("LOSE", tl_px(20, 4))
+
+        if 'Player' in Score.win:
             Game.font.write("PRESS ENTER TO CHALLENGE THE HARD MODE.",
                             tl_px(6, 13))
             Rival.hard_mode = True
-        else:
-            raise AssertionError
+        elif 'Rival' in Score.win:
+            Game.font.write("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
+            Rival.hard_mode = False
 
 
 def load_sprites_all():

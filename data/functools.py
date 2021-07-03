@@ -4,7 +4,14 @@ import csv
 import math  # Mathtools
 import random  # Randomtools
 
+import numpy as np  # matrix() and grayscale() in clstools.py
+
 from data._bios import *
+
+
+# def switch_assign(var, value1, value2):  # 스위치식(번갈아) 할당
+#     variable = value1 if var != value1 else value2
+#     return variable
 
 
 def get_subclasses(superclass, get_supers=True, get_subs=True):
@@ -243,6 +250,27 @@ def append(_list: list, _item, tidy: bool = False):
     return _list
 
 
+def add(_dict: dict, *args):  # dict에 안전하게 새 key:[] 생성 및 item 추가
+    if len(args) >= 3:
+        key, args, value = args[0], args[1:-1], args[-1]
+        if key not in _dict:  # 덮어쓰기 버그 방지
+            _dict[key] = {}
+        _dict[key] = add(_dict[key], *args, value)
+        return _dict
+    else:
+        key, value = args
+        try:
+            if key not in _dict:
+                _dict[key] = value
+            elif type(_dict[key]) is not list:  # int.append(value) 버그 방지
+                _dict[key] = [_dict[key], value]
+            else:
+                _dict[key].append(value)
+            return _dict
+        except TypeError:
+            raise TypeError("_dict의 층 수와 args의 층 수가 일치하지 않습니다")
+
+
 def remove(_list: list, _item, tidy: bool = False):
     """tidy=True: _list 안에 있는 모든 _item들을 삭제.
     tidy=False: _list 맨 앞에 있는 하나의 item을 삭제.
@@ -282,34 +310,55 @@ def replace_items(log: dict, insert_item, *exception_keys):
 #
 
 
-""" Mathtools: Tools for math, physics """
+""" Mathtools: Tools for math, physics, matrix """
 
 
-def batch_cal(tuple_a: Union[list, tuple], tuple_b: Union[list, tuple],
-              subtraction=False) -> tuple:
-    tuple_a, tuple_b, result = list(tuple_a), list(tuple_b), []
+def matrix(*args):  # *args == data_a, sign_1, data_b, sign_2 ......
+    data_a, sign, data_b = None, None, None
 
-    if len(tuple_a) > len(tuple_b):
-        while len(tuple_a) == len(tuple_b):
-            tuple_b.append(0)
-    elif len(tuple_a) < len(tuple_b):
-        while len(tuple_a) == len(tuple_b):
-            tuple_a.append(0)
+    def matrix_inner(_data_a, _sign, _data_b):
+        matrix_a, matrix_b = np.array(_data_a), np.array(_data_b)
+        if _sign == '+':
+            return matrix_a + matrix_b
+        elif _sign == '-':
+            return matrix_a - matrix_b
+        elif _sign in ['*', '×']:
+            return matrix_a * matrix_b
+        elif _sign in ['/', '÷']:
+            return matrix_a / matrix_b
+        elif _sign == '//':  # 몫
+            return matrix_a // matrix_b
+        elif _sign == '%':  # 나머지
+            return matrix_a % matrix_b
+        else:
+            raise AssertionError("use '+', '-', '*', '×', '/', '÷', '//', '%'")
 
-    if subtraction:
-        for a, b in zip(tuple_a, tuple_b):
-            result.append(a - b)
-    else:
-        for a, b in zip(tuple_a, tuple_b):
-            result.append(a + b)
+    for i, arg in enumerate(args):
+        if data_a is not None and sign is not None and data_b is not None:
+            data_a = matrix_inner(data_a, sign, data_b)
+            sign, data_b = None, None
 
-    return tuple(result)
+        if i % 2 == 0:  # 0 or 짝수
+            if data_a is None:
+                data_a = arg
+            elif data_b is None:
+                data_b = arg
+            else:
+                print(i, arg)
+                raise AssertionError
+        else:  # 홀수: 사칙연산 부호
+            if sign is None:
+                sign = arg
+            else:
+                raise AssertionError
+
+    return matrix_inner(data_a, sign, data_b).tolist()
 
 
 def calculate_radian(rect_a, rect_b):
     a_position = rect_a.center if type(rect_a) is pg.Rect else rect_a
     b_position = rect_b.center if type(rect_b) is pg.Rect else rect_b
-    base_length, height_length = batch_cal(a_position, b_position, True)
+    base_length, height_length = matrix(a_position, '-', b_position)
     radian = math.atan2(-height_length, base_length)  # 라디안 값 각도(angle)
     return radian
 
