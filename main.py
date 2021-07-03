@@ -1,4 +1,4 @@
-""" Project PPP v0.3.0 """
+""" Project PPP v0.3.1 """
 
 from itertools import combinations  # 조합: collision_check()에서 사용
 
@@ -11,10 +11,8 @@ main > keyinput > object > /data/: clstools > functools > _bios > _constants
 
 
 class Game:
-    font_big = Text('GenShinGothic-Monospace-Bold', 120, CYAN, tl_px(2.5, 1),
-                    BLACK)
-    font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, tl_px(2, 13),
-                BLACK)
+    font_big = Text('GenShinGothic-Monospace-Bold', 120, CYAN, CENTER, BLACK)
+    font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER, BLACK)
 
     @classmethod
     def time(cls):
@@ -98,11 +96,11 @@ class Title(Game):
 
     def draw(self):
         super().draw()
-        Game.font_big.write("Powerful Ping-Pong")
+        Game.font_big("Powerful Ping-Pong", rc8(0, -5))
         if Player.saves:
-            Game.font.write(" PRESS ENTER TO START GAME.")
+            Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 2))
         else:
-            Game.font.write("SELECT LEFT/RIGHT AND COLOR.")
+            Game.font("SELECT LEFT/RIGHT AND COLOR.", rc8(-3.5, 2))
 
 
 class Stage(Game):
@@ -158,18 +156,17 @@ class End(Game):
         Score.draw()
 
         if LEFT in Score.win:
-            Game.font_big.write("WIN", tl_px(6.5, 4))
-            Game.font_big.write("LOSE", tl_px(20, 4))
+            Game.font_big("WIN", rc8(-3.5, -4))
+            Game.font_big("LOSE", rc8(3.5, -4))
         elif RIGHT in Score.win:
-            Game.font_big.write("WIN", tl_px(6.5, 4))
-            Game.font_big.write("LOSE", tl_px(20, 4))
+            Game.font_big("LOSE", rc8(-3.5, -4))
+            Game.font_big("WIN", rc8(3.5, -4))
 
         if 'Player' in Score.win:
-            Game.font.write("PRESS ENTER TO CHALLENGE THE HARD MODE.",
-                            tl_px(6, 13))
+            Game.font("PRESS ENTER TO CHALLENGE THE HARD MODE.", tl_px(6, 13))
             Rival.hard_mode = True
         elif 'Rival' in Score.win:
-            Game.font.write("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
+            Game.font("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
             Rival.hard_mode = False
 
 

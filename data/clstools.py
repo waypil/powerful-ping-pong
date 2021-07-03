@@ -18,43 +18,23 @@ class Collision:
 
 
 class Text:  # 편리성 개선 필요
-    def __init__(self, fontname, size, color, xy: tuple, background=None,
-                 antialias=True):
+    def __init__(self, name, size, color, align=CENTER, backg=None, aa=True):
+        self.fontname = name
         self.size = size
+        self.align = align
         self.color = color
-        self.x, self.y = xy
-        self.background = background
-        self.antialias = antialias
-        self.fontname = fontname
-        self.font = pg.font.Font(f'resources/fonts/{fontname}.ttf', size)
+        self.background = backg
+        self.antialias = aa
+        self.font = pg.font.Font(f'resources/fonts/{name}.ttf', size)
 
-    def write(self, sentence, xy: tuple = (None, None)):
+    def __call__(self, sentence, xy: tuple = (0, 0)):  # write
         text = self.font.render(
             f'{sentence}', self.antialias, self.color, self.background)
-
-        x, y = xy
-        if x is None:
-            x = self.x
-        if y is None:
-            y = self.y
-
-        Screen.on.blit(text, [x, y])
+        Screen.on.blit(text, set_rect(text, xy, point=self.align))
 
     def change_size(self, size):
         self.size = size
         self.font = pg.font.Font(f'resources/{self.fontname}.ttf', size)
-
-    def change_color(self, color):
-        self.color = color
-
-    def change_position(self, x, y):
-        self.x, self.y = x, y
-
-    def change_background(self, color):
-        self.background = color
-
-    def change_antialias(self, boolean):
-        self.antialias = boolean
 
 
 class Framewatch:
@@ -135,7 +115,7 @@ class Framewatch:
 
 
 class Time:  # Framewatch를 객체화한 클래스.
-    __font = Text('GenShinGothic-Monospace-Bold', 64, WHITE, (20, 0))
+    # __font = Text('GenShinGothic-Monospace-Bold', 64, WHITE, (20, 0))
     __clock = Framewatch('TIMER')
     most = 0
     current = 0  # current frame
@@ -153,7 +133,7 @@ class Time:  # Framewatch를 객체화한 클래스.
         else:
             seconds = cls.current  # deciseconds
 
-        cls.__font.write(seconds)
+        # cls.__font(seconds)
 
     @classmethod
     def convert(cls, ndigits=0):

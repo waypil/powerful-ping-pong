@@ -103,6 +103,14 @@ def px_tl(*numbers):  # pixel to tile
         raise TypeError("*numbers type must be list/tuple/int/float.")
 
 
+def rc8(x, y):  # Relative Coordinates ±n/8
+    # result_x = x * SYS.rect.w / 16 + SYS.rect.w / 2
+    # result_y = y * SYS.rect.h / 16 + SYS.rect.h / 2
+    result_x = SYS.rect.w * (8 + x) / 16
+    result_y = SYS.rect.h * (8 + y) / 16
+    return result_x, result_y
+
+
 def rect_xy_copy(rect, dx=None, dy=None):
     result_rects = []
     rect_x, rect_y = rect.copy(), rect.copy()
