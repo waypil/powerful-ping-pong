@@ -307,7 +307,7 @@ class Score:
     font_l = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(8, 0))
     font_r = Text('GenShinGothic-Monospace-Bold', 52, WHITE, tl_px(23, 0))
     win = None
-    win_score = 1
+    win_score = 5
 
     @classmethod
     def draw(cls):
