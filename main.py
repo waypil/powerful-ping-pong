@@ -30,7 +30,7 @@ class Game:
         init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
                     게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
         """
-        for subclass in [Obj, Invisible,
+        for subclass in [Obj, Package, Invisible,
                          *get_subclasses(Obj, get_supers=False)]:
             attr_name = f'{subclass.__name__.lower()}s'  # 'Obj' → 'objs'
             if init:  # Game.objs = pg.sprite.Group()
@@ -88,11 +88,7 @@ class Game:
 class Title(Game):
     def create(self):
         super().create()
-        Decoration('sample_field', tl_px(18, 9), TOPLEFT)
-        ButtonSelectLR(LEFT, tl_px(19, 7), TOPLEFT)
-        ButtonSelectLR(RIGHT, tl_px(25, 7), TOPLEFT)
-        PaddleSample(['gray', 'left'], tl_px(19, 12), TOPLEFT)
-        PaddleSample(['gray', 'right'], tl_px(29, 12), TOPRIGHT)
+        Package('select_player', tl_px(18, 9), TOPLEFT)
 
     def draw(self):
         super().draw()
@@ -111,7 +107,8 @@ class Stage(Game):
     def create(self):
         super().create()
         Field('black')
-        Ball('ball', SYS.rect.center, point=CENTER), Player(), Rival()
+        Ball('ball', SYS.rect.center, point=CENTER)
+        Player(), Rival()
 
     def init(self):
         super().init(), Score.reset(), Time.start()

@@ -412,6 +412,16 @@ class ReviveBall(Skill):  # 공 부활
                 super().invoke()
 
 
+class Package(pg.sprite.Sprite):
+    def __init__(self, name, xy: tuple, point):
+        super().__init__()
+        self.field = Decoration('sample_field', xy)
+        self.button_l = ButtonSelectLR(LEFT, tl_px(19, 7), TOPLEFT)
+        self.button_r = ButtonSelectLR(RIGHT, tl_px(25, 7), TOPLEFT)
+        self.pdl_l = PaddleSample(['gray', 'left'], tl_px(19, 12), TOPLEFT)
+        self.pdl_r = PaddleSample(['gray', 'right'], tl_px(29, 12), TOPRIGHT)
+
+
 class Invisible(pg.sprite.Sprite):
     """"""
 
