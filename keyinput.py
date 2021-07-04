@@ -1,7 +1,8 @@
-""" Project PPP v0.3.3 """
+""" Project PPP v0.3.4 """
 
 import sys
-from object import *
+
+from package import *
 
 
 class Keyinput:

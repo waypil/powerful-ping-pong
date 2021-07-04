@@ -1,4 +1,4 @@
-""" Project PPP v0.3.3 """
+""" Project PPP v0.3.4 """
 
 from keyinput import *
 
@@ -30,7 +30,7 @@ class Game:
         init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
                     게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
         """
-        for subclass in [Obj, Package, Invisible,
+        for subclass in [Obj, Package, Invisible, *get_subclasses(Package),
                          *get_subclasses(Obj, get_supers=False)]:
             attr_name = f'{subclass.__name__.lower()}s'  # 'Obj' → 'objs'
             if init:  # Game.objs = pg.sprite.Group()
@@ -52,7 +52,7 @@ class Game:
     def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
         """
-        Keyinput.update(), self.objs.update()
+        Keyinput.update(), self.objs.update(), Package.s.update()
 
     def draw(self):
         """update 결과에 따라, 배경/스프라이트를 화면에 표시.
@@ -86,16 +86,22 @@ class Game:
 
 
 class Title(Game):
+    def __init__(self, name):
+        super().__init__(name)
+        self.select_player = None
+
     def create(self):
         super().create()
-        Package('select_player', tl_px(18, 9), TOPLEFT)
+        self.select_player = \
+            PackSelectPlayer('select_player', tl_px(18, 9), TOPLEFT)
 
     def draw(self):
         super().draw()
         Game.font[120][CYAN]("Powerful Ping-Pong", rc8(0, -5))  # title
+
         if Player.saves:
             Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 3))
-            if Player.saves['name'] == LEFT:
+            if self.select_player.state == LEFT:
                 Game.font("↓ Player", rc8(2.5, 1.5))
             else:
                 Game.font("Player ↓", rc8(5.5, 1.5))

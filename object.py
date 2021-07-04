@@ -1,4 +1,4 @@
-""" Project PPP v0.3.3 """
+""" Project PPP v0.3.4 """
 
 from data.clstools import *
 
@@ -83,7 +83,7 @@ class Obj(pg.sprite.Sprite):
             if 0 in indexes:  # self.name에 해당하는 subkey가 있다면
                 self.name = indexes[0]
 
-            result = []   # [출력 파트]
+            result = []  # [출력 파트]
 
             for i, self_subkey in enumerate(split(self.imgkey), start=1):
                 if i in indexes:  # 새 subkey를 i자릿수에 붙임
@@ -309,16 +309,6 @@ class ButtonSelectLR(Button):
             self.set_sprite('blue')
             self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, '')
 
-        if self.name == LEFT and self.sprite_is(PUSH):
-            self.__class__.get(RIGHT).set_sprite(UNPUSH)
-        elif self.name == RIGHT and self.sprite_is(PUSH):
-            self.__class__.get(LEFT).set_sprite(UNPUSH)
-
-        if self.sprite_is(PUSH):  # setting upload
-            Player.saves = {'name': self.name, 'imgkey': self.imgkey}
-        else:  # UNPUSH
-            Rival.saves = {'name': self.name, 'imgkey': self.imgkey}
-
 
 class Skill(Obj):
     @classmethod
@@ -410,24 +400,6 @@ class ReviveBall(Skill):  # 공 부활
             if left_right(self.player.rect.right, self.ball.rect.left):
                 self.ball.radian = math.pi  # 왼쪽 수직 방향
                 super().invoke()
-
-
-class Package(pg.sprite.Sprite):
-    def __init__(self, name, xy: tuple, point):
-        super().__init__()
-        self.name = name
-
-        field_xy = xy
-        btn_l_xy = matrix(field_xy, tl_px(1, -2))
-        btn_r_xy = matrix(btn_l_xy, tl_px(6, 0))
-        pdl_l_xy = matrix(field_xy, tl_px(1, 3))
-        pdl_r_xy = matrix(pdl_l_xy, tl_px(10, 0))
-
-        self.field = Decoration('sample_field', field_xy, point)
-        self.button_l = ButtonSelectLR(LEFT, btn_l_xy, TOPLEFT)
-        self.button_r = ButtonSelectLR(RIGHT, btn_r_xy, TOPLEFT)
-        self.paddle_l = PaddleSample(['gray', 'left'], pdl_l_xy, TOPLEFT)
-        self.paddle_r = PaddleSample(['gray', 'right'], pdl_r_xy, TOPRIGHT)
 
 
 class Invisible(pg.sprite.Sprite):
