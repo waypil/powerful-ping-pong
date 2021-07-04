@@ -1,7 +1,5 @@
 """ Project PPP v0.3.2 """
 
-from itertools import combinations  # 조합: collision_check()에서 사용
-
 from keyinput import *
 
 
@@ -18,6 +16,23 @@ class Game:
         Time.update()  # 프레임 시간 +0.01초
         # Time.draw(True, 2)  # 프레임 시간을 화면에 표시
 
+    def set_sprite_groups(self, init=True):
+        """
+        Game.__init__() 안에 self.attr_name = pg.sprite.Group() 변수들을 만들고
+        그 변수들을 각 class.s에 전달, 서로 공유하도록 만듦.
+
+        init=True: cls명에 따른 인스턴스 변수 양산, 그곳에 빈 Group() 할당.
+                   첫 실행, 혹은 SYS.mode가 변경될 때(예: stage가 바뀔 때) 사용
+        init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
+                    게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
+        """
+        for subclass in [Obj, *get_subclasses(Obj)]:
+            attr_name = f'{subclass.__name__.lower()}s'  # 'Obj' → 'objs'
+            if init:  # Game.objs = pg.sprite.Group()
+                setattr(self, attr_name, pg.sprite.Group())
+            subclass.s = getattr(self, attr_name)  # Game.objs → Obj.s 전달
+        Obj.invisibles = pg.sprite.Group()
+
     def __init__(self, name):
         self.name = name
 
@@ -33,24 +48,19 @@ class Game:
     def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
         """
-        Keyinput.update()
-        self.objs.update()
+        Keyinput.update(), self.objs.update()
 
     def draw(self):
         """update 결과에 따라, 배경/스프라이트를 화면에 표시.
         """
-        Screen.on.fill(BLACK)
-        self.objs.draw(Screen.on)
+        Screen.on.fill(BLACK), self.objs.draw(Screen.on)
 
     def run(self):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
         """
         self.init()
-
         while SYS.mode(self.name):
-            self.loop()
-            fps.tick(FPS)
-
+            self.loop(), fps.tick(FPS)
         self.off()
 
     def loop(self):
@@ -63,25 +73,7 @@ class Game:
     def off(self):
         """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
-        self.set_sprite_groups()
-        Time.off()
-
-    def set_sprite_groups(self, init=True):
-        """
-        Game.__init__ 안에 obj들이 담길 pg.sprite.Group() 변수들을 만들고,
-        그 변수들을 각 class.s에 할당하는 기능.
-
-        init=True: cls명에 따른 인스턴스 변수 양산, 그곳에 빈 Group() 할당.
-                   첫 실행, 혹은 SYS.mode가 변경될 때(예: stage가 바뀔 때) 사용
-        init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
-                    게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
-        """
-        for subclass in [Obj, *get_subclasses(Obj)]:  # self.{sub_objs}
-            attr_name = f'{subclass.__name__.lower()}s'
-            if init:
-                setattr(self, attr_name, pg.sprite.Group())
-            subclass.s = getattr(self, attr_name)  # object.py에 전달
-        Obj.invisibles = pg.sprite.Group()
+        self.set_sprite_groups(), Time.off()
 
 
 class Title(Game):
@@ -95,7 +87,7 @@ class Title(Game):
 
     def draw(self):
         super().draw()
-        Game.font[120][CYAN]("Powerful Ping-Pong", rc8(0, -5))
+        Game.font[120][CYAN]("Powerful Ping-Pong", rc8(0, -5))  # title
         if Player.saves:
             Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 3))
         else:
@@ -106,54 +98,28 @@ class Stage(Game):
     def create(self):
         super().create()
         Background('black')
-
-        Wall(TOP, tl_px(2, 0), TOPLEFT)
-        Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
-
         Ball('ball', SYS.rect.center, point=CENTER)
-
+        Wall(TOP, tl_px(2, 0), TOPLEFT), Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
         Player(), Rival()
 
     def init(self):
-        super().init()
-        Score.reset()
-        Time.start()
+        super().init(), Score.reset(), Time.start()
 
     def update(self):
-        super().update()
-        self.collision_check_all()
-        self.apply_dxdy_all()
+        super().update(), collision_check(self.objs), apply_dxdy(self.objs)
 
     def draw(self):
-        super().draw()
-        Score.draw()
-
-    def collision_check_all(self):
-        for obj_a, obj_b in combinations(self.objs.sprites(), 2):
-            if not batch(COLLISION_CHECK_EXCEPTION, OR,
-                         [obj_a.clsname(), obj_b.clsname()]):
-                if pg.sprite.collide_rect(obj_a, obj_b):
-                    obj_a.after_coll(obj_b), obj_b.after_coll(obj_a)
-                else:
-                    obj_b.coll.now = []
-
-    def apply_dxdy_all(self):
-        for obj in self.objs.sprites():
-            obj.apply_dxdy()
+        super().draw(), Score.draw()
 
 
 class End(Game):
     def create(self):
         super().create()
         Background('black')
-
-        Wall(TOP, tl_px(2, 0), TOPLEFT)
-        Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
+        Wall(TOP, tl_px(2, 0), TOPLEFT), Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
 
     def draw(self):
-        super().draw()
-        Score.draw()
-
+        super().draw(), Score.draw()
         if LEFT in Score.win:
             Game.font[120][CYAN]("WIN", rc8(-3.5, -4))
             Game.font[120][CYAN]("LOSE", rc8(3.5, -4))
@@ -169,18 +135,9 @@ class End(Game):
             Rival.hard_mode = False
 
 
-def load_sprites_all():
-    """'sprite' in subclass.__dict__ : 자신의 클래스만 탐색함.
-    hasattr(subclass, 'sprite') :  superclass도 포함해서 탐색함.
-    """
-    for subclass in get_subclasses(Obj):
-        if 'sprite' in subclass.__dict__ and not subclass.sprite:
-            subclass.sprite = Image(subclass.__name__)
-
-
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
-    load_sprites_all()  # 모든 이미지 불러오기
+    load_sprites_all(Obj, Image)  # 모든 이미지 불러오기
 
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 

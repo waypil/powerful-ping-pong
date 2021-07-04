@@ -3,6 +3,7 @@
 import csv
 import math  # Mathtools
 import random  # Randomtools
+from itertools import combinations  # 조합: collision_check_all()
 
 import numpy as np  # matrix() and grayscale() in clstools.py
 
@@ -411,3 +412,47 @@ def random_pick(*args: Union[list, tuple]):
         for i in range(quantity):
             __list.append(choice)
     return random.choice(__list)
+
+
+#
+
+
+""" Exclusivetools: functions for other classes """
+
+
+def load_sprites_all(obj_class, image_class):  # Only in main.py
+    """'sprite' in subclass.__dict__ : 자신의 클래스만 탐색함.
+    hasattr(subclass, 'sprite') :  superclass도 포함해서 탐색함.
+    """
+    for subclass in get_subclasses(obj_class):  # cls.sprite가 있을 경우
+        if 'sprite' in subclass.__dict__ and not subclass.sprite:
+            subclass.sprite = image_class(subclass.__name__)
+
+
+def collision_check(objs: pg.sprite.Group):  # Only in main.py
+    for a, b in combinations(objs.sprites(), 2):  # 두 obj씩 짝 짓기
+        if not batch(COLL_CHECK_EXCEPTION, OR, [a.clsname(), b.clsname()]):
+            # obj의 class가 '충돌 체크 제외 대상'에 해당되지 않을 경우
+            if pg.sprite.collide_rect(a, b):  # 충돌 시
+                a.after_coll(b), b.after_coll(a)
+            else:  # 충돌이 아닐 시
+                remove(a.coll.now, b), remove(b.coll.now, a)
+
+
+def apply_dxdy(objs: pg.sprite.Group):  # Only in main.py
+    for obj in objs.sprites():
+        obj.apply_dxdy()
+
+
+def naming(cls, name=None):  # Only in Obj.__init__()
+    if name is None:
+        new_name, subkeys = f'{cls.__name__.lower()}_{cls.copied}', ''
+        imgkey = cls.sprite.defalut_imgkey
+    elif type(name) in [list, tuple]:
+        new_name, subkeys = name[0], name[1:]
+        imgkey = '_'.join(subkeys)
+    else:  # if type(name) is str:
+        new_name, subkeys = name, ''
+        imgkey = cls.sprite.defalut_imgkey
+    return new_name, imgkey, subkeys
+

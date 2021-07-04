@@ -26,26 +26,15 @@ class Obj(pg.sprite.Sprite):
         Obj.s.add(self), self.__class__.s.add(self)
         self.__class__.copied += 1
 
-        if name is None:
-            name = self.clsname().lower()
-            self.name, subkeys = f'{name}_{self.__class__.copied}', ''
-            self.imgkey = self.__class__.sprite.defalut_imgkey
-        elif type(name) in [list, tuple]:
-            self.name, subkeys = name[0], name[1:]
-            self.imgkey = '_'.join(subkeys)
-        else:
-            self.name, subkeys = name, ''
-            self.imgkey = self.__class__.sprite.defalut_imgkey
-
-        self.image = self.__class__.sprite[name, subkeys]
-
+        self.name, self.imgkey, subkeys = naming(self.__class__, name)
+        self.image = self.__class__.sprite[self.name, subkeys]
         self.rect = set_rect(self.image, xy, point=point)
 
         self.dx, self.dy, self.dxd, self.dyd = 0, 0, 0.0, 0.0
 
+        self.coll = Collision()
         self.move_log = {LEFT: False, RIGHT: False, UP: False, DOWN: False,
                          STOP: False}
-        self.coll = Collision()
 
         self.is_alive = True  # self.is_frozen = False
 
@@ -60,10 +49,11 @@ class Obj(pg.sprite.Sprite):
             self.set_sprite(loaded_name, loaded_imgkey)
 
     def hide(self, make_sprite_invisible: bool = True):
+        self.kill()
         if make_sprite_invisible:
-            self.kill(), self.__class__.invisibles.add(self)
-        else:  # make sprite visible
-            self.kill(), Obj.s.add(self), self.__class__.s.add(self)
+            self.__class__.invisibles.add(self)
+        else:  # if make sprite visible
+            Obj.s.add(self), self.__class__.s.add(self)
 
     def clsname(self, compare_name=''):  # class name
         if compare_name:

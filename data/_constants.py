@@ -5,7 +5,7 @@
 FPS = 100
 TILE_LENGTH = 40  # 타일 한 변의 길이
 
-COLLISION_CHECK_EXCEPTION = ('Background', 'Skill')
+COLL_CHECK_EXCEPTION = ('Background', 'Skill')
 
 
 #
