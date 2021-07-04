@@ -128,10 +128,10 @@ class End(Game):
             Game.font[120][CYAN]("WIN", rc8(3.5, -4))
 
         if 'Player' in Score.win:
-            Game.font("PRESS ENTER TO CHALLENGE THE HARD MODE.", tl_px(6, 13))
+            Game.font("PRESS ENTER TO CHALLENGE THE HARD MODE.", rc8(0, 4))
             Rival.hard_mode = True
         elif 'Rival' in Score.win:
-            Game.font("PRESS ENTER TO TRY AGAIN.", tl_px(10, 13))
+            Game.font("PRESS ENTER TO TRY AGAIN.", rc8(0, 4))
             Rival.hard_mode = False
 
 

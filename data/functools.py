@@ -456,3 +456,9 @@ def naming(cls, name=None):  # Only in Obj.__init__()
         imgkey = cls.sprite.defalut_imgkey
     return new_name, imgkey, subkeys
 
+
+def split(*strings):  # Only in Obj.set_sprite()
+    result = []
+    for _str in list_(strings):
+        result.append(None) if _str is None else result.append(_str.split('_'))
+    return list_(result)

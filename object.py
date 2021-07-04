@@ -66,17 +66,10 @@ class Obj(pg.sprite.Sprite):
 
     def set_sprite(self, *keywords):
         if keywords:
-            indexes = {}
+            indexes = {}  # 자릿수와 subkey를 저장하는 공간
             new_imgkey = ''
-            new_keywords = []
 
-            for keyword in keywords:
-                if keyword is None:
-                    new_keywords.append(None)
-                else:
-                    new_keywords.append(keyword.split('_'))
-
-            for keyword in list_(new_keywords):
+            for keyword in split(keywords):
                 for i, subkeys in self.__class__.sprite.subkeys.items():
                     if keyword in subkeys:  # 유효한 키워드인지 검사
                         indexes[i] = keyword
@@ -85,9 +78,7 @@ class Obj(pg.sprite.Sprite):
 
             assert indexes, f"잘못된 키워드{keywords}가 입력되었습니다."
 
-            for i, self_subkey in enumerate(
-                    [self.name, *self.imgkey.split('_')]):
-
+            for i, self_subkey in enumerate(split(self.name, self.imgkey)):
                 if i == 0:
                     if i in indexes:
                         self.name = indexes[i]
