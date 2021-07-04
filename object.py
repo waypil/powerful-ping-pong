@@ -1,16 +1,15 @@
-""" Project PPP v0.3.2 """
+""" Project PPP v0.3.3 """
 
 from data.clstools import *
 
 
-class Invisible(pg.sprite.Sprite):
-    s = None
-
-
 class Obj(pg.sprite.Sprite):
     """모든 객체의 틀.
+
+    [클래스 변수]
+    * subclass들 중 상위 class: cls.sprite = Image()
+    * subclass들 중 하위 class: cls.s = Group(), cls.copied = 0, cls.saves = {}
     """
-    s = None
 
     @classmethod
     def get(cls, name=None):
@@ -116,28 +115,18 @@ class Obj(pg.sprite.Sprite):
 
 
 class Background(Obj):
-    s = None
-    sprite = {}
-    copied = 0
+    """"""
 
 
 class Decoration(Obj):
-    s = None
-    sprite = {}
-    copied = 0
+    """"""
 
 
 class Wall(Obj):
-    s = None
-    sprite = {}
-    copied = 0
+    """"""
 
 
 class Ball(Obj):
-    s = None
-    sprite = {}
-    copied = 0
-
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
         self.init_rect = set_rect(self.image, SYS.rect.center, point=CENTER)
@@ -196,7 +185,6 @@ class Ball(Obj):
 
 
 class Paddle(Obj):
-    sprite = {}
     pos = {LEFT: [(tl_px(3), SYS.rect.centery), MIDLEFT],
            RIGHT: [matrix(SYS.rect.midright, '+', tl_px(-3, 0)), MIDRIGHT]}
 
@@ -228,10 +216,6 @@ class Paddle(Obj):
 
 
 class Player(Paddle):
-    s = None
-    copied = 0
-    saves = {}
-
     def __init__(self):
         super().__init__('gray', (0, 0), TOPLEFT)
         xy, point = self.__class__.pos[self.__class__.saves['name']]
@@ -248,9 +232,6 @@ class Player(Paddle):
 
 
 class Rival(Paddle):
-    s = None
-    copied = 0
-    saves = {}
     hard_mode = False
 
     def __init__(self):
@@ -278,14 +259,158 @@ class Rival(Paddle):
 
 
 class PaddleSample(Paddle):
-    s = None
-    copied = 0
-
     def update(self):
         super().update()
         for button_lr in ButtonSelectLR.s.sprites():
             if self.imgkey == button_lr.name:
                 self.set_sprite(button_lr.imgkey.split('_')[0])  # color
+
+
+class Button(Obj):
+    def update(self):
+        super().update()
+        if bool(self.rect.collidepoint(Mouse.pos)):
+            if Mouse.event == CLICK_LEFT_DOWN:
+                self.set_sprite(PUSH)
+
+    def button(self, state):
+        assert state in ['gray', 'red', 'blue', PUSH, UNPUSH]
+        self.set_sprite(state)
+
+
+class ButtonSelectColor(Button):
+    """"""
+
+
+class ButtonSelectLR(Button):
+    def __init__(self, name, xy: tuple, point):
+        super().__init__(name, xy, point)
+        red_pos = matrix(xy, '+', tl_px(0.5, -1))
+        blue_pos = matrix(red_pos, '+', tl_px(2, 0))
+        self.red = ButtonSelectColor(['color', 'red_unpush'], red_pos, TOPLEFT)
+        self.blue = ButtonSelectColor(['color', 'blue_unpush'],
+                                      blue_pos, TOPLEFT)
+        self.red.hide(), self.blue.hide()
+
+    def update(self):
+        super().update()
+        if self.sprite_is(PUSH):
+            self.red.hide(False), self.blue.hide(False)
+        else:  # self.sprite_is(UNPUSH)
+            self.red.hide(), self.blue.hide()
+
+        if self.red.sprite_is(PUSH):
+            self.set_sprite('red')
+            self.red.set_sprite(UNPUSH, ''), self.blue.set_sprite(UNPUSH)
+        elif self.blue.sprite_is(PUSH):
+            self.set_sprite('blue')
+            self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, '')
+
+        if self.name == LEFT and self.sprite_is(PUSH):
+            self.__class__.get(RIGHT).set_sprite(UNPUSH)
+        elif self.name == RIGHT and self.sprite_is(PUSH):
+            self.__class__.get(LEFT).set_sprite(UNPUSH)
+
+        if self.sprite_is(PUSH):  # setting upload
+            Player.saves = {'name': self.name, 'imgkey': self.imgkey}
+        else:  # UNPUSH
+            Rival.saves = {'name': self.name, 'imgkey': self.imgkey}
+
+
+class Skill(Obj):
+    @classmethod
+    def reset_buttons(cls):  # 현재 사용하지 않음
+        for subclass in get_subclasses(cls, get_supers=True):
+            for skill in subclass.s:
+                skill.state = ON
+                skill.set_sprite(ON)
+
+    def __init__(self, xy: tuple, point):
+        super().__init__(self.clsname().lower(), xy, point)
+        # self.antimash = Framewatch('ANTI-MASHING', min_sec=10)
+        self.state = ON  # ON, RUNNING, OFF
+
+    def update(self):
+        super().update()
+        if self.state == RUNNING:
+            self.invoke()
+
+    def button(self, force_state=''):
+        assert force_state in ['', ON, RUNNING, OFF]
+
+        if force_state:
+            self.state = force_state
+        elif self.state == ON:
+            self.state = RUNNING
+
+        self.set_sprite(self.state)
+
+    def invoke(self):  # 스킬 발동 (자식 class의 맨 마지막 줄에 배치할 것!)
+        self.button(OFF)
+
+
+class BoostBall(Skill):
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.players, self.balls = Player.s, Ball.s
+
+    def invoke(self):
+        colls = pg.sprite.groupcollide(self.players, self.balls, False, False)
+        if colls:
+            for player, ball in colls.items():
+                ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
+            super().invoke()
+
+
+class IncreaseBall(Skill):  # obj 증식
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.player, self.ball = None, None
+
+    def update(self):
+        self.player, self.ball = Player.get(), Ball.get()
+        super().update()
+
+    def invoke(self):
+        if self.player.sprite_is(LEFT):
+            invocable_area = left_right(self.ball.rect.center, SYS.rect.center)
+        else:  # RIGHT
+            invocable_area = left_right(SYS.rect.center, self.ball.rect.center)
+
+        if invocable_area and Time.get(-self.ball.delay) > 100:
+            ball2 = Ball('ball', self.ball.rect.center, CENTER)
+            ball3 = Ball('ball', self.ball.rect.center, CENTER)
+            ball2.delay = ball3.delay = Time.get(-100)
+            ball2.speed = ball3.speed = self.ball.speed
+            ball2.radian = self.ball.radian + math.pi / 6  # 시계 반대 방향
+            ball3.radian = self.ball.radian - math.pi / 6  # 시계 방향
+            super().invoke()
+        else:  # if self.state == RUNNING:
+            self.button(ON)
+
+
+class ReviveBall(Skill):  # 공 부활
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.player, self.ball = None, None
+
+    def update(self):
+        self.player, self.ball = Player.get(), Ball.get()
+        super().update()
+
+    def invoke(self):  # 스킬 발동
+        if self.player.sprite_is(LEFT):
+            if left_right(self.ball.rect.right, self.player.rect.left):
+                self.ball.radian = 0  # 오른쪽 수직 방향
+                super().invoke()
+        else:  # RIGHT
+            if left_right(self.player.rect.right, self.ball.rect.left):
+                self.ball.radian = math.pi  # 왼쪽 수직 방향
+                super().invoke()
+
+
+class Invisible(pg.sprite.Sprite):
+    """"""
 
 
 class Score:
@@ -333,164 +458,3 @@ class Score:
             cls.s = {LEFT: 0, RIGHT: 0}
         if reset_win:
             cls.win = False
-
-
-class Button(Obj):
-    s = None
-    sprite = {}
-    copied = 0
-
-    def update(self):
-        super().update()
-        if bool(self.rect.collidepoint(Mouse.pos)):
-            if Mouse.event == CLICK_LEFT_DOWN:
-                self.set_sprite(PUSH)
-
-    def button(self, state):
-        assert state in ['gray', 'red', 'blue', PUSH, UNPUSH]
-        self.set_sprite(state)
-
-
-class ButtonSelectColor(Button):
-    s = None
-    copied = 0
-
-
-class ButtonSelectLR(Button):
-    s = None
-    copied = 0
-
-    def __init__(self, name, xy: tuple, point):
-        super().__init__(name, xy, point)
-        red_pos = matrix(xy, '+', tl_px(0.5, -1))
-        blue_pos = matrix(red_pos, '+', tl_px(2, 0))
-        self.red = Button(['color', 'red_unpush'], red_pos, TOPLEFT)
-        self.blue = Button(['color', 'blue_unpush'], blue_pos, TOPLEFT)
-        self.red.hide(), self.blue.hide()
-
-    def update(self):
-        super().update()
-        if self.sprite_is(PUSH):
-            self.red.hide(False), self.blue.hide(False)
-        else:  # self.sprite_is(UNPUSH)
-            self.red.hide(), self.blue.hide()
-
-        if self.red.sprite_is(PUSH):
-            self.set_sprite('red')
-            self.red.set_sprite(UNPUSH, ''), self.blue.set_sprite(UNPUSH)
-        elif self.blue.sprite_is(PUSH):
-            self.set_sprite('blue')
-            self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, '')
-
-        if self.name == LEFT and self.sprite_is(PUSH):
-            self.__class__.get(RIGHT).set_sprite(UNPUSH)
-        elif self.name == RIGHT and self.sprite_is(PUSH):
-            self.__class__.get(LEFT).set_sprite(UNPUSH)
-
-        if self.sprite_is(PUSH):  # setting upload
-            Player.saves = {'name': self.name, 'imgkey': self.imgkey}
-        else:  # UNPUSH
-            Rival.saves = {'name': self.name, 'imgkey': self.imgkey}
-
-
-class Skill(Obj):
-    sprite = {}
-
-    @classmethod
-    def reset_buttons(cls):  # 현재 사용하지 않음
-        for subclass in get_subclasses(cls, get_supers=True):
-            for skill in subclass.s:
-                skill.state = ON
-                skill.set_sprite(ON)
-
-    def __init__(self, xy: tuple, point):
-        super().__init__(self.clsname().lower(), xy, point)
-        # self.antimash = Framewatch('ANTI-MASHING', min_sec=10)
-        self.state = ON  # ON, RUNNING, OFF
-
-    def update(self):
-        super().update()
-        if self.state == RUNNING:
-            self.invoke()
-
-    def button(self, force_state=''):
-        assert force_state in ['', ON, RUNNING, OFF]
-
-        if force_state:
-            self.state = force_state
-        elif self.state == ON:
-            self.state = RUNNING
-
-        self.set_sprite(self.state)
-
-    def invoke(self):  # 스킬 발동 (자식 class의 맨 마지막 줄에 배치할 것!)
-        self.button(OFF)
-
-
-class BoostBall(Skill):
-    s = None
-    copied = 0
-
-    def __init__(self, xy: tuple, point):
-        super().__init__(xy, point)
-        self.players, self.balls = Player.s, Ball.s
-
-    def invoke(self):
-        colls = pg.sprite.groupcollide(self.players, self.balls, False, False)
-        if colls:
-            for player, ball in colls.items():
-                ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
-            super().invoke()
-
-
-class IncreaseBall(Skill):  # obj 증식
-    s = None
-    copied = 0
-
-    def __init__(self, xy: tuple, point):
-        super().__init__(xy, point)
-        self.player, self.ball = None, None
-
-    def update(self):
-        self.player, self.ball = Player.get(), Ball.get()
-        super().update()
-
-    def invoke(self):
-        if self.player.sprite_is(LEFT):
-            invocable_area = left_right(self.ball.rect.center, SYS.rect.center)
-        else:  # RIGHT
-            invocable_area = left_right(SYS.rect.center, self.ball.rect.center)
-
-        if invocable_area and Time.get(-self.ball.delay) > 100:
-            ball2 = Ball('ball', self.ball.rect.center, CENTER)
-            ball3 = Ball('ball', self.ball.rect.center, CENTER)
-            ball2.delay = ball3.delay = Time.get(-100)
-            ball2.speed = ball3.speed = self.ball.speed
-            ball2.radian = self.ball.radian + math.pi / 6  # 시계 반대 방향
-            ball3.radian = self.ball.radian - math.pi / 6  # 시계 방향
-            super().invoke()
-        else:  # if self.state == RUNNING:
-            self.button(ON)
-
-
-class ReviveBall(Skill):  # 공 부활
-    s = None
-    copied = 0
-
-    def __init__(self, xy: tuple, point):
-        super().__init__(xy, point)
-        self.player, self.ball = None, None
-
-    def update(self):
-        self.player, self.ball = Player.get(), Ball.get()
-        super().update()
-
-    def invoke(self):  # 스킬 발동
-        if self.player.sprite_is(LEFT):
-            if left_right(self.ball.rect.right, self.player.rect.left):
-                self.ball.radian = 0  # 오른쪽 수직 방향
-                super().invoke()
-        else:  # RIGHT
-            if left_right(self.player.rect.right, self.ball.rect.left):
-                self.ball.radian = math.pi  # 왼쪽 수직 방향
-                super().invoke()

@@ -420,15 +420,6 @@ def random_pick(*args: Union[list, tuple]):
 """ Exclusivetools: functions for other classes """
 
 
-def load_sprites_all(obj_class, image_class):  # Only in main.py
-    """'sprite' in subclass.__dict__ : 자신의 클래스만 탐색함.
-    hasattr(subclass, 'sprite') :  superclass도 포함해서 탐색함.
-    """
-    for subclass in get_subclasses(obj_class):  # cls.sprite가 있을 경우
-        if 'sprite' in subclass.__dict__ and not subclass.sprite:
-            subclass.sprite = image_class(subclass.__name__)
-
-
 def collision_check(objs: pg.sprite.Group):  # Only in main.py
     for a, b in combinations(objs.sprites(), 2):  # 두 obj씩 짝 짓기
         if not batch(COLL_CHECK_EXCEPTION, OR, [a.clsname(), b.clsname()]):

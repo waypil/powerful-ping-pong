@@ -1,4 +1,4 @@
-""" Project PPP v0.3.2 """
+""" Project PPP v0.3.3 """
 
 from keyinput import *
 
@@ -11,10 +11,14 @@ main > keyinput > object > /data/: clstools > functools > _bios > _constants
 class Game:
     font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER, BLACK)
 
-    @classmethod
-    def time(cls):
-        Time.update()  # 프레임 시간 +0.01초
-        # Time.draw(True, 2)  # 프레임 시간을 화면에 표시
+    @staticmethod
+    def assign_class_variables():  # class variables 자동 할당
+        # 모든 이미지 불러오기: Obj의 subclass들 중 상위 class들만
+        for subclass in get_subclasses(Obj, get_subs=False):
+            setattr(subclass, 'sprite', Image(subclass.__name__))
+
+        for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
+            setattr(subclass, 'copied', 0), setattr(subclass, 'saves', {})
 
     def set_sprite_groups(self, init=True):
         """
@@ -26,7 +30,8 @@ class Game:
         init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
                     게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
         """
-        for subclass in [Obj, Invisible, *get_subclasses(Obj)]:
+        for subclass in [Obj, Invisible,
+                         *get_subclasses(Obj, get_supers=False)]:
             attr_name = f'{subclass.__name__.lower()}s'  # 'Obj' → 'objs'
             if init:  # Game.objs = pg.sprite.Group()
                 setattr(self, attr_name, pg.sprite.Group())
@@ -53,6 +58,11 @@ class Game:
         """update 결과에 따라, 배경/스프라이트를 화면에 표시.
         """
         Screen.on.fill(BLACK), self.objs.draw(Screen.on)
+
+    @classmethod
+    def time(cls):
+        Time.update()  # 프레임 시간 +0.01초
+        # Time.draw(True, 2)  # 프레임 시간을 화면에 표시
 
     def run(self):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
@@ -140,7 +150,7 @@ class End(Game):
 
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
-    load_sprites_all(Obj, Image)  # 모든 이미지 불러오기
+    Game.assign_class_variables()
 
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 
