@@ -26,12 +26,11 @@ class Game:
         init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
                     게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
         """
-        for subclass in [Obj, *get_subclasses(Obj)]:
+        for subclass in [Obj, Invisible, *get_subclasses(Obj)]:
             attr_name = f'{subclass.__name__.lower()}s'  # 'Obj' → 'objs'
             if init:  # Game.objs = pg.sprite.Group()
                 setattr(self, attr_name, pg.sprite.Group())
-            subclass.s = getattr(self, attr_name)  # Game.objs → Obj.s 전달
-        Obj.invisibles = pg.sprite.Group()
+            subclass.s = getattr(self, attr_name)  # Game.objs → Obj.s
 
     def __init__(self, name):
         self.name = name
@@ -90,6 +89,10 @@ class Title(Game):
         Game.font[120][CYAN]("Powerful Ping-Pong", rc8(0, -5))  # title
         if Player.saves:
             Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 3))
+            if Player.saves['name'] == LEFT:
+                Game.font("↓ Player", rc8(2.5, 1.5))
+            else:
+                Game.font("Player ↓", rc8(5.5, 1.5))
         else:
             Game.font("SELECT LEFT/RIGHT AND COLOR.", rc8(-3.5, 3))
 

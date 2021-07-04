@@ -3,11 +3,14 @@
 from data.clstools import *
 
 
+class Invisible(pg.sprite.Sprite):
+    s = None
+
+
 class Obj(pg.sprite.Sprite):
     """모든 객체의 틀.
     """
     s = None
-    invisibles = None
 
     @classmethod
     def get(cls, name=None):
@@ -35,8 +38,9 @@ class Obj(pg.sprite.Sprite):
         self.coll = Collision()
         self.move_log = {LEFT: False, RIGHT: False, UP: False, DOWN: False,
                          STOP: False}
-
         self.is_alive = True  # self.is_frozen = False
+
+        self.save_settings_download()
 
     def update(self):
         if self.is_alive:
@@ -51,7 +55,7 @@ class Obj(pg.sprite.Sprite):
     def hide(self, make_sprite_invisible: bool = True):
         self.kill()
         if make_sprite_invisible:
-            self.__class__.invisibles.add(self)
+            Invisible.s.add(self)
         else:  # if make sprite visible
             Obj.s.add(self), self.__class__.s.add(self)
 
@@ -66,28 +70,29 @@ class Obj(pg.sprite.Sprite):
 
     def set_sprite(self, *keywords):
         if keywords:
-            indexes = {}  # 자릿수와 subkey를 저장하는 공간
-            new_imgkey = ''
+            indexes = {}  # [검사 파트]: 자릿수와 subkey를 저장하는 공간
 
             for keyword in split(keywords):
                 for i, subkeys in self.__class__.sprite.subkeys.items():
-                    if keyword in subkeys:  # 유효한 키워드인지 검사
-                        indexes[i] = keyword
-                    elif keyword is None:
+                    if keyword in subkeys:  # 입력한 키워드가 유효한지 검사
+                        indexes[i] = keyword  # {자릿수: 유효키워드} 저장
+                    elif not keyword or keyword is None:  # keyword == ''/None
                         self.hide()
 
             assert indexes, f"잘못된 키워드{keywords}가 입력되었습니다."
 
-            for i, self_subkey in enumerate(split(self.name, self.imgkey)):
-                if i == 0:
-                    if i in indexes:
-                        self.name = indexes[i]
-                elif i in indexes:
-                    new_imgkey = f'{new_imgkey}_{indexes[i]}'
-                else:
-                    new_imgkey = f'{new_imgkey}_{self_subkey}'
+            if 0 in indexes:  # self.name에 해당하는 subkey가 있다면
+                self.name = indexes[0]
 
-            self.imgkey = new_imgkey[1:]  # _foo_bar 꼴로 되어 있기 때문
+            result = []   # [출력 파트]
+
+            for i, self_subkey in enumerate(split(self.imgkey), start=1):
+                if i in indexes:  # 새 subkey를 i자릿수에 붙임
+                    result.append(indexes[i])
+                else:  # 기존 subkey를 그대로 i자릿수에 붙임
+                    result.append(self_subkey)
+
+            self.imgkey = '_'.join(result)
 
         self.image = self.__class__.sprite[self.name][self.imgkey]
 
@@ -197,7 +202,6 @@ class Paddle(Obj):
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
-        self.save_settings_download()
         self.speed = 5  # default
 
     def move(self, command):
@@ -373,10 +377,10 @@ class ButtonSelectLR(Button):
 
         if self.red.sprite_is(PUSH):
             self.set_sprite('red')
-            self.red.set_sprite(UNPUSH, None), self.blue.set_sprite(UNPUSH)
+            self.red.set_sprite(UNPUSH, ''), self.blue.set_sprite(UNPUSH)
         elif self.blue.sprite_is(PUSH):
             self.set_sprite('blue')
-            self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, None)
+            self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, '')
 
         if self.name == LEFT and self.sprite_is(PUSH):
             self.__class__.get(RIGHT).set_sprite(UNPUSH)
