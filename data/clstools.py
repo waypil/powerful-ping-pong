@@ -17,24 +17,31 @@ class Collision:
         self.last, self.now = [], []
 
 
-class Text:  # 편리성 개선 필요
-    def __init__(self, name, size, color, align=CENTER, backg=None, aa=True):
-        self.fontname = name
-        self.size = size
-        self.align = align
-        self.color = color
-        self.background = backg
-        self.antialias = aa
-        self.font = pg.font.Font(f'resources/fonts/{name}.ttf', size)
+class Text:
+    def __init__(self, name, size, color, align=CENTER, bg=None):
+        self.fontpath = f'resources/fonts/{name}.ttf'
+        self.default_size = self.size = size
+        self.default_color = self.color = color
+
+        self.align = align  # Rect/Position/Location in _constants.py
+        self.bg = bg  # BackGround
+        self.aa = True  # Anti-Aliasing
+
+    def __getitem__(self, argument: Union[int, str]):
+        if type(argument) is int:
+            self.size = argument
+        else:  # str
+            self.color = argument
+        return self
 
     def __call__(self, sentence, xy: tuple = (0, 0)):  # write
-        text = self.font.render(
-            f'{sentence}', self.antialias, self.color, self.background)
+        font = pg.font.Font(self.fontpath, self.size)
+        text = font.render(f'{sentence}', self.aa, self.color, self.bg)
         Screen.on.blit(text, set_rect(text, xy, point=self.align))
+        self.__reset_to_default()
 
-    def change_size(self, size):
-        self.size = size
-        self.font = pg.font.Font(f'resources/{self.fontname}.ttf', size)
+    def __reset_to_default(self):
+        self.size, self.color = self.default_size, self.default_color
 
 
 class Framewatch:

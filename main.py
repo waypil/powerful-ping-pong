@@ -1,4 +1,4 @@
-""" Project PPP v0.3.1 """
+""" Project PPP v0.3.2 """
 
 from itertools import combinations  # 조합: collision_check()에서 사용
 
@@ -11,7 +11,6 @@ main > keyinput > object > /data/: clstools > functools > _bios > _constants
 
 
 class Game:
-    font_big = Text('GenShinGothic-Monospace-Bold', 120, CYAN, CENTER, BLACK)
     font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER, BLACK)
 
     @classmethod
@@ -96,11 +95,11 @@ class Title(Game):
 
     def draw(self):
         super().draw()
-        Game.font_big("Powerful Ping-Pong", rc8(0, -5))
+        Game.font[120][CYAN]("Powerful Ping-Pong", rc8(0, -5))
         if Player.saves:
-            Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 2))
+            Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 3))
         else:
-            Game.font("SELECT LEFT/RIGHT AND COLOR.", rc8(-3.5, 2))
+            Game.font("SELECT LEFT/RIGHT AND COLOR.", rc8(-3.5, 3))
 
 
 class Stage(Game):
@@ -156,11 +155,11 @@ class End(Game):
         Score.draw()
 
         if LEFT in Score.win:
-            Game.font_big("WIN", rc8(-3.5, -4))
-            Game.font_big("LOSE", rc8(3.5, -4))
+            Game.font[120][CYAN]("WIN", rc8(-3.5, -4))
+            Game.font[120][CYAN]("LOSE", rc8(3.5, -4))
         elif RIGHT in Score.win:
-            Game.font_big("LOSE", rc8(-3.5, -4))
-            Game.font_big("WIN", rc8(3.5, -4))
+            Game.font[120][CYAN]("LOSE", rc8(-3.5, -4))
+            Game.font[120][CYAN]("WIN", rc8(3.5, -4))
 
         if 'Player' in Score.win:
             Game.font("PRESS ENTER TO CHALLENGE THE HARD MODE.", tl_px(6, 13))

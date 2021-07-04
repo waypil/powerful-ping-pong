@@ -1,4 +1,4 @@
-""" Project PPP v0.3.1 """
+""" Project PPP v0.3.2 """
 
 from data.clstools import *
 
@@ -304,19 +304,26 @@ class PaddleSample(Paddle):
 
 
 class Score:
-    font = Text('GenShinGothic-Monospace-Bold', 52, WHITE, TOPLEFT)
+    font = Text('GenShinGothic-Monospace-Bold', 52, WHITE)
     win = None
     win_score = 5
 
     @classmethod
     def draw(cls):
-        cls.font(cls.s[LEFT], tl_px(8, 0))
-        cls.font(cls.s[RIGHT], tl_px(23, 0))
+        cls.font(cls.s[LEFT], rc8(-4, -7.2))
+        cls.font(cls.s[RIGHT], rc8(4, -7.2))
 
     @classmethod
     def plus(cls, obj_name, score=1):
         cls.s[obj_name] += score
-        cls.win_check()
+        cls.win_check(), cls.cancel_paddle_skills()
+
+    @classmethod
+    def cancel_paddle_skills(cls):
+        player = Player.get()
+        for i in player.skill:
+            if len(Ball.s) <= 1 and player.skill[i].state == RUNNING:
+                player.skill[i].button(OFF)
 
     @classmethod
     def win_check(cls):
