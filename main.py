@@ -110,10 +110,8 @@ class Title(Game):
 class Stage(Game):
     def create(self):
         super().create()
-        Background('black')
-        Ball('ball', SYS.rect.center, point=CENTER)
-        Wall(TOP, tl_px(2, 0), TOPLEFT), Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
-        Player(), Rival()
+        Field('black')
+        Ball('ball', SYS.rect.center, point=CENTER), Player(), Rival()
 
     def init(self):
         super().init(), Score.reset(), Time.start()
@@ -128,8 +126,7 @@ class Stage(Game):
 class End(Game):
     def create(self):
         super().create()
-        Background('black')
-        Wall(TOP, tl_px(2, 0), TOPLEFT), Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
+        Field('black')
 
     def draw(self):
         super().draw(), Score.draw()

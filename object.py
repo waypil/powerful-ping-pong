@@ -114,8 +114,11 @@ class Obj(pg.sprite.Sprite):
         self.dx, self.dy = 0, 0
 
 
-class Background(Obj):
-    """"""
+class Field(Obj):
+    def __init__(self, name):
+        super().__init__(name)
+        self.wall_top = Wall(TOP, tl_px(2, 0), TOPLEFT)
+        self.wall_bottom = Wall(BOTTOM, tl_px(2, 16), TOPLEFT)
 
 
 class Decoration(Obj):
