@@ -419,9 +419,9 @@ class Package(pg.sprite.Sprite):
 
         field_xy = xy
         btn_l_xy = matrix(field_xy, tl_px(1, -2))
-        btn_r_xy = matrix(button_l_xy, tl_px(6, 0))
+        btn_r_xy = matrix(btn_l_xy, tl_px(6, 0))
         pdl_l_xy = matrix(field_xy, tl_px(1, 3))
-        pdl_r_xy = matrix(paddle_l_xy, tl_px(10, 0))
+        pdl_r_xy = matrix(pdl_l_xy, tl_px(10, 0))
 
         self.field = Decoration('sample_field', field_xy, point)
         self.button_l = ButtonSelectLR(LEFT, btn_l_xy, TOPLEFT)
