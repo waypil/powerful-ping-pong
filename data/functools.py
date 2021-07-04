@@ -325,7 +325,7 @@ def replace_items(log: dict, insert_item, *exception_keys):
 def matrix(*args):  # *args == data_a, sign_1, data_b, sign_2 ......
     data_a, sign, data_b = None, None, None
 
-    def matrix_inner(_data_a, _sign, _data_b):
+    def __matrix_inner(_data_a, _sign, _data_b):
         matrix_a, matrix_b = np.array(_data_a), np.array(_data_b)
         if _sign == '+':
             return matrix_a + matrix_b
@@ -342,26 +342,23 @@ def matrix(*args):  # *args == data_a, sign_1, data_b, sign_2 ......
         else:
             raise AssertionError("use '+', '-', '*', '×', '/', '÷', '//', '%'")
 
-    for i, arg in enumerate(args):
+    for arg in args:
         if data_a is not None and sign is not None and data_b is not None:
-            data_a = matrix_inner(data_a, sign, data_b)
+            data_a = __matrix_inner(data_a, sign, data_b)
             sign, data_b = None, None
 
-        if i % 2 == 0:  # 0 or 짝수
-            if data_a is None:
-                data_a = arg
-            elif data_b is None:
-                data_b = arg
-            else:
-                print(i, arg)
-                raise AssertionError
-        else:  # 홀수: 사칙연산 부호
+        if type(arg) is str:
+            sign = arg
+        elif data_a is None:
+            data_a = arg
+        elif data_b is None:
             if sign is None:
-                sign = arg
-            else:
-                raise AssertionError
+                sign = '+'
+            data_b = arg
+        else:
+            raise AssertionError
 
-    return matrix_inner(data_a, sign, data_b).tolist()
+    return __matrix_inner(data_a, sign, data_b).tolist()  # np.array → list
 
 
 def calculate_radian(rect_a, rect_b):

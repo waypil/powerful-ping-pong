@@ -189,7 +189,7 @@ class Ball(Obj):
 
 class Paddle(Obj):
     pos = {LEFT: [(tl_px(3), SYS.rect.centery), MIDLEFT],
-           RIGHT: [matrix(SYS.rect.midright, '+', tl_px(-3, 0)), MIDRIGHT]}
+           RIGHT: [matrix(SYS.rect.midright, tl_px(-3, 0)), MIDRIGHT]}
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
@@ -288,8 +288,8 @@ class ButtonSelectColor(Button):
 class ButtonSelectLR(Button):
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
-        red_pos = matrix(xy, '+', tl_px(0.5, -1))
-        blue_pos = matrix(red_pos, '+', tl_px(2, 0))
+        red_pos = matrix(xy, tl_px(0.5, -1))
+        blue_pos = matrix(red_pos, tl_px(2, 0))
         self.red = ButtonSelectColor(['color', 'red_unpush'], red_pos, TOPLEFT)
         self.blue = ButtonSelectColor(['color', 'blue_unpush'],
                                       blue_pos, TOPLEFT)
