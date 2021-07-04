@@ -38,15 +38,6 @@ class SYS:
             cls.__mode_temp = None
 
 
-class Mouse:
-    event = None
-    pos = (0, 0)
-
-
-# class Key:
-#     event = None
-
-
 class Screen:
     rect = None  # x, y값은 항상 0으로 고정해야 하며, 절대 변경하면 안 됨.
     on = None
@@ -86,3 +77,12 @@ class Screen:
         os.environ['SDL_VIDEO_CENTERED'] = '1'
         pg.display.set_caption("Powerful Ping-Pong")  # 게임 타이틀
         pg.display.init()
+
+
+class Mouse:
+    event = None
+    pos = (0, 0)
+
+
+class Key:
+    keep, down, up = [], [], []

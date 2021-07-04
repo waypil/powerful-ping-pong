@@ -1,4 +1,4 @@
-""" Project PPP v0.3.4 """
+""" Project PPP v0.4.0 """
 
 from keyinput import *
 
@@ -37,6 +37,18 @@ class Game:
                 setattr(self, attr_name, pg.sprite.Group())
             subclass.s = getattr(self, attr_name)  # Game.objs → Obj.s
 
+    @staticmethod
+    def apply_system_keys():
+        if 'esc' in Key.up:  # 게임 종료
+            pg.quit(), sys.exit()
+
+        if 'enter' in Key.up:  # 전체화면/창모드 전환
+            if SYS.mode('TITLE', 'END') and Player.saves:
+                SYS.mode_change('GAME')  # ENTER 누르면 게임 시작
+
+        if 'F11' in Key.up:  # 전체화면/창모드 전환
+            Screen.update_resolution()
+
     def __init__(self, name):
         self.name = name
 
@@ -69,7 +81,7 @@ class Game:
         """
         self.init()
         while SYS.mode(self.name):
-            self.loop(), fps.tick(FPS)
+            Game.apply_system_keys(), self.loop(), fps.tick(FPS)
         self.off()
 
     def loop(self):

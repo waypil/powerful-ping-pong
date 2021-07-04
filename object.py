@@ -1,4 +1,4 @@
-""" Project PPP v0.3.4 """
+""" Project PPP v0.4.0 """
 
 from data.clstools import *
 
@@ -37,13 +37,15 @@ class Obj(pg.sprite.Sprite):
         self.coll = Collision()
         self.move_log = {LEFT: False, RIGHT: False, UP: False, DOWN: False,
                          STOP: False}
-        self.is_alive = True  # self.is_frozen = False
+        # self.is_alive = True  # self.is_frozen = False
 
         self.save_settings_download()
 
-    def update(self):
-        if self.is_alive:
-            super().update()
+    def apply_keys(self):
+        pass
+
+    def update(self):  # 자식 update()의 맨 위에 배치할 것!
+        self.apply_keys(), super().update()
 
     def save_settings_download(self):  # 저장된 세팅이 있을 경우
         if 'saves' in self.__class__.__dict__ and self.__class__.saves:
@@ -223,8 +225,30 @@ class Player(Paddle):
         super().__init__('gray', (0, 0), TOPLEFT)
         xy, point = self.__class__.pos[self.__class__.saves['name']]
         self.rect = set_rect(self.image, xy, point=point)
+
         self.skill = {}
         self.init_skills(BoostBall, IncreaseBall, ReviveBall)
+
+        self.control = {UP: [UP, 'w'], DOWN: [DOWN, 's'],
+                        'Skill1': ['z', '1'], 'Skill2': ['x', '2'],
+                        'Skill3': ['c', '3']
+                        }
+
+    def apply_keys(self):
+        super().apply_keys()
+        if batch(self.control[UP], OR, Key.keep):
+            self.move(UP)
+        if batch(self.control[DOWN], OR, Key.keep):
+            self.move(DOWN)
+        if batch(self.control['Skill1'], OR, Key.down):
+            self.skill[1].button()
+        if batch(self.control['Skill2'], OR, Key.down):
+            self.skill[2].button()
+        if batch(self.control['Skill3'], OR, Key.down):
+            self.skill[3].button()
+
+    def update(self):
+        super().update()
 
     def init_skills(self, *skill_classes):
         for i, skill_class in enumerate(skill_classes, start=1):
@@ -382,7 +406,7 @@ class IncreaseBall(Skill):  # obj 증식
             self.button(ON)
 
 
-class ReviveBall(Skill):  # 공 부활
+class ReviveBall(Skill):  # 공 부활 (2개 이상인 경우 랜덤으로 1개만)
     def __init__(self, xy: tuple, point):
         super().__init__(xy, point)
         self.player, self.ball = None, None
