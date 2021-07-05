@@ -75,7 +75,7 @@ class Screen:
     def __centering_window(cls):
         pg.display.quit()
         os.environ['SDL_VIDEO_CENTERED'] = '1'
-        pg.display.set_caption("Powerful Ping-Pong")  # 게임 타이틀
+        pg.display.set_caption(GAME_TITLE_NAME)  # 게임 창 상단 바
         pg.display.init()
 
 

@@ -17,33 +17,6 @@ class Collision:
         self.last, self.now = [], []
 
 
-class Text:
-    def __init__(self, name, size, color, align=CENTER, bg=None):
-        self.fontpath = f'resources/fonts/{name}.ttf'
-        self.default_size = self.size = size
-        self.default_color = self.color = color
-
-        self.align = align  # Rect/Position/Location in _constants.py
-        self.bg = bg  # BackGround
-        self.aa = True  # Anti-Aliasing
-
-    def __getitem__(self, argument: Union[int, str]):
-        if type(argument) is int:
-            self.size = argument
-        else:  # str
-            self.color = argument
-        return self
-
-    def __call__(self, sentence, xy: tuple = (0, 0)):  # write
-        font = pg.font.Font(self.fontpath, self.size)
-        text = font.render(f'{sentence}', self.aa, self.color, self.bg)
-        Screen.on.blit(text, set_rect(text, xy, point=self.align))
-        self.__reset_to_default()
-
-    def __reset_to_default(self):
-        self.size, self.color = self.default_size, self.default_color
-
-
 class Framewatch:
     """Default is 100 fps.
     """
@@ -119,67 +92,6 @@ class Framewatch:
         self.running = False
         self.__preset = 0
         self.__checkpoint = None
-
-
-class Time:  # Framewatch를 객체화한 클래스.
-    # __font = Text('GenShinGothic-Monospace-Bold', 64, WHITE, (20, 0))
-    __clock = Framewatch('TIMER')
-    most = 0
-    current = 0  # current frame
-
-    @classmethod
-    def update(cls):
-        cls.__clock.tick()
-        cls.current = cls.__clock.get_elapsed()
-        cls.most = max(cls.most, cls.current)
-
-    @classmethod
-    def draw(cls, convert_frame_to_second=False, ndigits=0):
-        if convert_frame_to_second:
-            seconds = cls.convert(ndigits)
-        else:
-            seconds = cls.current  # deciseconds
-
-        # cls.__font(seconds)
-
-    @classmethod
-    def convert(cls, ndigits=0):
-        if ndigits == 0:
-            seconds = cls.current // 100  # 0초
-        elif ndigits == 1:
-            seconds = cls.current // 10 / 10  # 0.0초
-        elif ndigits == 2:
-            seconds = cls.current / 100  # 0.00초
-        else:
-            raise ValueError("Time.convert(ndigits=) must be integer 1/2/3")
-        return seconds
-
-    @classmethod
-    def get(cls, adjust_frame: int = 0):
-        return cls.current + adjust_frame
-
-    @classmethod
-    def start(cls):
-        cls.__clock.start()
-
-    @classmethod
-    def reset(cls, start_seconds):
-        cls.current = start_seconds * 100
-        cls.__clock.reset(cls.current)
-
-    @classmethod
-    def pause(cls):  # 스톱워치 일시정지 (게임 일시정지 시 사용)
-        cls.__clock.pause()
-
-    @classmethod
-    def off(cls):
-        cls.__clock.off()
-        cls.current = 0
-
-    @classmethod
-    def go(cls, warp_seconds):
-        cls.current = max(0, cls.current + warp_seconds * 100)
-        cls.__clock.reset(cls.current)
 
 
 class Image:

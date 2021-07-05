@@ -2,6 +2,8 @@
 
 # IN-GAMES #
 
+GAME_TITLE_NAME = "Powerful Ping-Pong"
+
 FPS = 100
 TILE_LENGTH = 40  # 타일 한 변의 길이
 
@@ -15,6 +17,7 @@ COLL_CHECK_EXCEPTION = ('Field', 'Skill')
 
 
 SAVE, LOAD = 'save', 'load'
+EASY, NORMAL, HARD = 'easy', 'normal', 'hard'
 
 # Debug status: processing_time_gauge()
 DANGER, WARNING = 'DANGER', 'WARNING'

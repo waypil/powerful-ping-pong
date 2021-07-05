@@ -1,4 +1,6 @@
-""" Project PPP v0.4.0 """
+""" Project PPP v0.5.0 """
+
+import pickle
 
 from data.clstools import *
 
@@ -29,7 +31,12 @@ class Obj(pg.sprite.Sprite):
         self.__class__.copied += 1
 
         self.name, self.imgkey, subkeys = naming(self.__class__, name)
-        self.image = self.__class__.sprite[self.name, subkeys]
+
+        if name is None:
+            self.image = pg.Surface((0, 0))  # must be changed or don't use
+        else:
+            self.image = self.__class__.sprite[self.name, subkeys]
+
         self.rect = set_rect(self.image, xy, point=point)
 
         self.dx, self.dy, self.dxd, self.dyd = 0, 0, 0.0, 0.0
@@ -59,6 +66,9 @@ class Obj(pg.sprite.Sprite):
             Invisible.s.add(self)
         else:  # if make sprite visible
             Obj.s.add(self), self.__class__.s.add(self)
+
+    def hide_temp(self, make_sprite_invisible: bool = True):
+        Obj.s.remove(self) if make_sprite_invisible else Obj.s.add(self)
 
     def clsname(self, compare_name=''):  # class name
         if compare_name:
@@ -116,6 +126,114 @@ class Obj(pg.sprite.Sprite):
         self.dx, self.dy = 0, 0
 
 
+class Text(Obj):
+    def __init__(self, fontname, size, color, align=CENTER, bg=None):
+        super().__init__(None, point=align)
+        self.fontname = fontname
+        self.fontpath = f'resources/fonts/{fontname}.ttf'
+
+        self.default_size = self.size = size
+        self.default_color = self.color = color
+        self.default_bg = self.bg = bg  # BackGround
+
+        self.align = align  # Rect/Position/Location in _constants.py
+        self.xy = (0, 0)  # temp: must be changed
+        self.aa = True  # Anti-Aliasing
+
+    def __getitem__(self, argument):
+        if type(argument) is int:
+            self.size = argument
+        elif type(argument) is tuple:
+            if len(argument) == 2:  # (x, y)
+                self.xy = argument
+            elif len(argument) == 3:  # (r, g, b)
+                self.color = argument
+            else:
+                raise AssertionError
+        else:
+            raise AssertionError
+        return self
+
+    def __call__(self, sentence):  # write (draw)
+        font = pg.font.Font(self.fontpath, self.size)
+        self.image = font.render(f'{sentence}', self.aa, self.color, self.bg)
+        self.rect = set_rect(self.image, self.xy, point=self.align)
+
+        if Obj.s.has(self):  # hide 상태가 아닐 경우
+            Screen.on.blit(self.image, self.rect)
+
+        self.__reset_to_default()
+
+    def __reset_to_default(self):
+        self.size = self.default_size
+        self.color, self.bg = self.default_color, self.default_bg
+
+
+class Time:  # Framewatch를 객체화한 클래스.
+    __font = None
+    __clock = Framewatch('TIMER')
+    most = 0
+    current = 0  # current frame
+
+    @classmethod
+    def init(cls):
+        cls.__font = Text('GenShinGothic-Monospace-Bold', 36, GREEN)
+
+    @classmethod
+    def update(cls):
+        cls.__clock.tick()
+        cls.current = cls.__clock.get_elapsed()
+        cls.most = max(cls.most, cls.current)
+
+    @classmethod
+    def draw(cls, convert_frame_to_second=False, ndigits=0):
+        if convert_frame_to_second:
+            seconds = cls.convert(ndigits)
+        else:
+            seconds = cls.current  # deciseconds
+
+        cls.__font[rc8(0, 7.2)](seconds)
+
+    @classmethod
+    def convert(cls, ndigits=0):
+        if ndigits == 0:
+            seconds = cls.current // 100  # 0초
+        elif ndigits == 1:
+            seconds = cls.current // 10 / 10  # 0.0초
+        elif ndigits == 2:
+            seconds = cls.current / 100  # 0.00초
+        else:
+            raise ValueError("Time.convert(ndigits=) must be integer 1/2/3")
+        return seconds
+
+    @classmethod
+    def get(cls, adjust_frame: int = 0):
+        return cls.current + adjust_frame
+
+    @classmethod
+    def start(cls):
+        cls.__clock.start()
+
+    @classmethod
+    def reset(cls, start_seconds):
+        cls.current = start_seconds * 100
+        cls.__clock.reset(cls.current)
+
+    @classmethod
+    def pause(cls):  # 스톱워치 일시정지 (게임 일시정지 시 사용)
+        cls.__clock.pause()
+
+    @classmethod
+    def off(cls):
+        cls.__clock.off()
+        cls.current = 0
+
+    @classmethod
+    def go(cls, warp_seconds):
+        cls.current = max(0, cls.current + warp_seconds * 100)
+        cls.__clock.reset(cls.current)
+
+
 class Field(Obj):
     def __init__(self, name):
         super().__init__(name)
@@ -145,6 +263,7 @@ class Ball(Obj):
             self.move()
 
     def move(self):
+        self.avoid_verticality()
         self.dx = math.cos(self.radian) * self.speed
         self.dy = -math.sin(self.radian) * self.speed
 
@@ -154,6 +273,11 @@ class Ball(Obj):
             else:
                 Score.plus(LEFT)
             self.reset()  # 초기 위치로 재배치
+
+    def avoid_verticality(self):  # 각도가 너무 수직일 경우, 살짝 기울여줌
+        north, south = math.pi * 1 / 2, math.pi * 3 / 2
+        if abs(self.radian - north) < 0.1 or abs(self.radian - south) < 0.1:
+            self.radian = random.choice([self.radian + 0.1, self.radian - 0.1])
 
     def bounce(self, obj):  # 튕기기 함수.
         if obj not in self.coll.last:
@@ -305,6 +429,44 @@ class Button(Obj):
         self.set_sprite(state)
 
 
+class ButtonText(Button):
+    def __init__(self, sentence, xy: tuple, point):
+        super().__init__(None, xy, point)
+        self.xy = xy
+
+        self.font = None
+        self.size, self.color, self.align, self.bg = 0, WHITE, point, None
+        self.__apply_font()
+
+        self.sentence = sentence
+        self.is_pushed = False
+
+    def update(self):
+        if bool(self.rect.collidepoint(Mouse.pos)):
+            if Mouse.event == CLICK_LEFT_DOWN:
+                self.is_pushed = False if self.is_pushed else True
+
+        self.font[self.xy](self.sentence)  # write (draw)
+        self.image, self.rect = self.font.image, self.font.rect
+
+    def font_reset(self, size='', color='', align='', bg=''):
+        if size:
+            self.size = size
+        if color:
+            self.color = color
+        if align:
+            self.align = align
+        if bg:
+            self.bg = bg
+
+        self.__apply_font()
+        self.image, self.rect = self.font.image, self.font.rect
+
+    def __apply_font(self):
+        self.font = Text('GenShinGothic-Monospace-Bold',
+                         self.size, self.color, self.align, self.bg)
+
+
 class ButtonSelectColor(Button):
     """"""
 
@@ -406,39 +568,57 @@ class IncreaseBall(Skill):  # obj 증식
             self.button(ON)
 
 
-class ReviveBall(Skill):  # 공 부활 (2개 이상인 경우 랜덤으로 1개만)
+class ReviveBall(Skill):  # 공 부활
     def __init__(self, xy: tuple, point):
         super().__init__(xy, point)
-        self.player, self.ball = None, None
+        self.player, self.balls = None, Ball.s
 
     def update(self):
-        self.player, self.ball = Player.get(), Ball.get()
+        self.player = Player.get()
         super().update()
 
     def invoke(self):  # 스킬 발동
-        if self.player.sprite_is(LEFT):
-            if left_right(self.ball.rect.right, self.player.rect.left):
-                self.ball.radian = 0  # 오른쪽 수직 방향
-                super().invoke()
-        else:  # RIGHT
-            if left_right(self.player.rect.right, self.ball.rect.left):
-                self.ball.radian = math.pi  # 왼쪽 수직 방향
-                super().invoke()
+        for ball in self.balls:
+            if self.player.sprite_is(LEFT):
+                if left_right(ball.rect.right, self.player.rect.left):
+                    ball.radian = 0  # 오른쪽 수직 방향
+                    super().invoke()
+            else:  # RIGHT
+                if left_right(player.rect.right, ball.rect.left):
+                    ball.radian = math.pi  # 왼쪽 수직 방향
+                    super().invoke()
 
 
 class Invisible(pg.sprite.Sprite):
     """"""
+    @classmethod
+    def all(cls, hide=True, *exceptions):
+        for obj in cls.__subgroup():
+            if obj not in exceptions:
+                obj.hide_temp(hide)
+
+    @staticmethod
+    def __subgroup(return_objs_list=True):
+        result = pg.sprite.Group()
+        for subclass in get_subclasses(Obj, get_supers=False):
+            result = group(result, subclass.s)
+
+        if return_objs_list:
+            return result.sprites()
+        else:
+            return result
 
 
 class Score:
-    font = Text('GenShinGothic-Monospace-Bold', 52, WHITE)
+    font = None
     win = None
     win_score = 5
+    best_time = {EASY: 0, HARD: 0}
 
     @classmethod
     def draw(cls):
-        cls.font(cls.s[LEFT], rc8(-4, -7.2))
-        cls.font(cls.s[RIGHT], rc8(4, -7.2))
+        cls.font[rc8(-3.5, -7.2)](cls.s[LEFT])
+        cls.font[rc8(3.5, -7.2)](cls.s[RIGHT])
 
     @classmethod
     def plus(cls, obj_name, score=1):
@@ -471,7 +651,35 @@ class Score:
 
     @classmethod
     def reset(cls, reset_score=True, reset_win=True):
+        cls.font = Text('GenShinGothic-Monospace-Bold', 52, WHITE)
+
         if reset_score:
             cls.s = {LEFT: 0, RIGHT: 0}
         if reset_win:
             cls.win = False
+
+    @classmethod
+    def save(cls):
+        if cls.win and 'Player' in cls.win:
+            sec = Time.convert(2)
+            if Rival.hard_mode:
+                if cls.best_time[HARD] == 0:
+                    cls.best_time[HARD] = sec
+                else:  # 과거 베스트 타임이 이미 존재한다면
+                    cls.best_time[HARD] = min(cls.best_time[HARD], sec)
+            else:
+                if cls.best_time[EASY] == 0:
+                    cls.best_time[EASY] = sec
+                else:  # 과거 베스트 타임이 이미 존재한다면
+                    cls.best_time[EASY] = min(cls.best_time[EASY], sec)
+
+            with open('data.pickle', 'wb') as savefile:  # 파일로 저장
+                pickle.dump(cls.best_time, savefile)
+
+    @classmethod
+    def load(cls):
+        try:
+            with open("data.pickle", "rb") as savefile:  # 세이브 파일 불러오기
+                cls.best_time = pickle.load(savefile)
+        except Exception:   # 세이브 파일이 없을 경우
+            cls.best_time = {EASY: 0, HARD: 0}

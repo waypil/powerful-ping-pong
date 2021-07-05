@@ -1,4 +1,4 @@
-""" Project PPP v0.4.0 """
+""" Project PPP v0.5.0 """
 
 from keyinput import *
 
@@ -9,16 +9,20 @@ main > keyinput > object > /data/: clstools > functools > _bios > _constants
 
 
 class Game:
-    font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER, BLACK)
-
     @staticmethod
-    def assign_class_variables():  # class variables 자동 할당
-        # 모든 이미지 불러오기: Obj의 subclass들 중 상위 class들만
+    def assign_class_variable_image():  # 모든 이미지 로드하기
         for subclass in get_subclasses(Obj, get_subs=False):
             setattr(subclass, 'sprite', Image(subclass.__name__))
 
+    @staticmethod
+    def assign_class_variable_copied():
         for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
-            setattr(subclass, 'copied', 0), setattr(subclass, 'saves', {})
+            setattr(subclass, 'copied', 0)
+
+    @staticmethod
+    def assign_class_variable_saves():
+        for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
+            setattr(subclass, 'saves', {})
 
     def set_sprite_groups(self, init=True):
         """
@@ -40,7 +44,10 @@ class Game:
     @staticmethod
     def apply_system_keys():
         if 'esc' in Key.up:  # 게임 종료
-            pg.quit(), sys.exit()
+            if SYS.mode('GAME'):
+                SYS.mode_change('TITLE')
+            else:  # 'TITLE', 'END'
+                pg.quit(), sys.exit()
 
         if 'enter' in Key.up:  # 전체화면/창모드 전환
             if SYS.mode('TITLE', 'END') and Player.saves:
@@ -51,15 +58,18 @@ class Game:
 
     def __init__(self, name):
         self.name = name
+        self.font = None
 
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        self.set_sprite_groups(), self.create()
+        self.set_sprite_groups(), Time.init(), self.create()
 
     def create(self):
         """객체(클래스 인스턴스)를 만드는 전용 공간. init() 안에 배치.
         """
+        self.font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER,
+                         BLACK)
 
     def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
@@ -74,7 +84,9 @@ class Game:
     @classmethod
     def time(cls):
         Time.update()  # 프레임 시간 +0.01초
-        # Time.draw(True, 2)  # 프레임 시간을 화면에 표시
+
+        if Time.get() != 0.0:
+            Time.draw(True, 1)  # 프레임 시간(소수점 1자릿수까지)을 화면에 표시
 
     def run(self):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
@@ -85,40 +97,64 @@ class Game:
         self.off()
 
     def loop(self):
-        """processing_time_gauge 데코레이션 적용을 위해 따로 분리
+        """processing_time_gauge 데코레이션 사용을 대비해 따로 분리
         """
         self.update(), self.draw(), self.time()
         pg.display.update()  # 모든 draw 명령을 화면에 반영
+
         SYS.mode_update()
 
     def off(self):
         """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
-        self.set_sprite_groups(), Time.off()
+        self.set_sprite_groups()
 
 
 class Title(Game):
     def __init__(self, name):
         super().__init__(name)
         self.select_player = None
+        self.credits = None
+
+    def init(self):
+        """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
+        """
+        super().init(), Time.off(), Game.assign_class_variable_saves()
 
     def create(self):
         super().create()
         self.select_player = \
             PackSelectPlayer('select_player', tl_px(18, 9), TOPLEFT)
 
+        self.credits = PackCredits(' CREDITS ', rc8(-8, 8), BOTTOMLEFT)
+
     def draw(self):
         super().draw()
-        Game.font[120][CYAN]("Powerful Ping-Pong", rc8(0, -5))  # title
+        self.font[120][CYAN][rc8(0, -5.5)](GAME_TITLE_NAME)
+
+        self.font[50][rc8(-3.5, 2.5)]("[BEST SCORE]")
+
+        if Score.best_time[EASY] == 0:
+            self.font[rc8(-3.5, 4)][GRAY](f"EASY: ---.--")
+        else:
+            self.font[rc8(-3.5, 4)](
+                f"EASY: {str(Score.best_time[EASY]).rjust(6, ' ')}")
+
+        if Score.best_time[HARD] == 0:
+            self.font[rc8(-3.5, 5)][GRAY](f"HARD: ---.--")
+        else:
+            self.font[rc8(-3.5, 5)](
+                f"HARD: {str(Score.best_time[HARD]).rjust(6, ' ')}")
 
         if Player.saves:
-            Game.font("PRESS ENTER TO START GAME.", rc8(-3.5, 3))
+            self.font[rc8(-2, -2.2)]("SELECT YOUR COLOR.  →")
+            self.font[rc8(-3.5, -0.5)]("PRESS ENTER TO START GAME.")
             if self.select_player.state == LEFT:
-                Game.font("↓ Player", rc8(2.5, 1.5))
+                self.font[rc8(2.5, 1.5)]("↓ Player")
             else:
-                Game.font("Player ↓", rc8(5.5, 1.5))
+                self.font[rc8(5.5, 1.5)]("Player ↓")
         else:
-            Game.font("SELECT LEFT/RIGHT AND COLOR.", rc8(-3.5, 3))
+            self.font[rc8(-2.5, -1)]("SELECT YOUR POSITION.  →")
 
 
 class Stage(Game):
@@ -129,7 +165,7 @@ class Stage(Game):
         Player(), Rival()
 
     def init(self):
-        super().init(), Score.reset(), Time.start()
+        Time.off(), super().init(), Score.reset(), Time.start()
 
     def update(self):
         super().update(), collision_check(self.objs), apply_dxdy(self.objs)
@@ -137,32 +173,40 @@ class Stage(Game):
     def draw(self):
         super().draw(), Score.draw()
 
+    def off(self):
+        super().off(), Time.pause(), Score.save()
+
 
 class End(Game):
     def create(self):
         super().create()
         Field('black')
 
+    def init(self):
+        super().init(), Score.reset(False, False)
+
     def draw(self):
         super().draw(), Score.draw()
+
         if LEFT in Score.win:
-            Game.font[120][CYAN]("WIN", rc8(-3.5, -4))
-            Game.font[120][CYAN]("LOSE", rc8(3.5, -4))
+            self.font[120][CYAN][rc8(-3.5, -3.5)]("WIN")
+            self.font[120][CYAN][rc8(3.5, -3.5)]("LOSE")
         elif RIGHT in Score.win:
-            Game.font[120][CYAN]("LOSE", rc8(-3.5, -4))
-            Game.font[120][CYAN]("WIN", rc8(3.5, -4))
+            self.font[120][CYAN][rc8(-3.5, -3.5)]("LOSE")
+            self.font[120][CYAN][rc8(3.5, -3.5)]("WIN")
 
         if 'Player' in Score.win:
-            Game.font("PRESS ENTER TO CHALLENGE THE HARD MODE.", rc8(0, 4))
+            self.font[rc8(0, 4)]("PRESS ENTER TO CHALLENGE THE HARD MODE.")
             Rival.hard_mode = True
         elif 'Rival' in Score.win:
-            Game.font("PRESS ENTER TO TRY AGAIN.", rc8(0, 4))
+            self.font[rc8(0, 4)]("PRESS ENTER TO TRY AGAIN.")
             Rival.hard_mode = False
 
 
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
-    Game.assign_class_variables()
+    Game.assign_class_variable_image(), Game.assign_class_variable_copied()
+    Score.load()
 
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 

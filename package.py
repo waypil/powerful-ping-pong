@@ -1,4 +1,4 @@
-""" Project PPP v0.4.0 """
+""" Project PPP v0.5.0 """
 
 from object import *
 
@@ -81,3 +81,25 @@ class PackButtonSelectLR(Package):
             return _right
         else:  # if direction is None:
             raise AssertionError
+
+
+class PackCredits(Package):
+    def __init__(self, name, xy: tuple, point):
+        super().__init__(name)
+        self.default_sentence = name
+
+        self.button = ButtonText(name, xy, point)
+        self.button.font_reset(36, BLACK, bg=WHITE)
+
+        self.popup = Decoration('credits', SYS.rect.center, CENTER)
+
+    def update(self):
+        super().update()
+        if self.button.is_pushed:
+            Invisible.all(True, self.button)
+            self.popup.hide(False)
+            self.button.sentence = "  CLOSE  "
+        else:
+            Invisible.all(False, self.button)
+            self.popup.hide()
+            self.button.sentence = self.default_sentence
