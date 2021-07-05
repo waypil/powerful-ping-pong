@@ -3,8 +3,9 @@
 from keyinput import *
 
 
-"""import 순서
-main > keyinput > object > /data/: clstools > functools > _bios > _constants
+""" [Import Order]
+* main > keyinput > package > object > /data/
+* /data/: clstools > functools > _bios > _constants
 """
 
 
