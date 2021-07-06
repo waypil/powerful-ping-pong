@@ -1,0 +1,49 @@
+[bgms]
+
+credits.wav
+Shadow (written by TH)
+https://grafolio.naver.com/works/1609412
+
+game1.wav
+DETROIT BEAT (written by ISAo)
+https://dova-s.jp/bgm/play12121.html
+
+game2.wav
+terms of electrons (written by ISAo)
+https://dova-s.jp/bgm/play11221.html
+
+title.wav
+Bitter Cutman (written by shimtone)
+https://dova-s.jp/bgm/play14798.html
+
+
+
+[sounds]
+
+button.wav
+クイズに解答する時のボタン音 (written by ひふみセオリー)
+https://dova-s.jp/se/play648.html
+
+charge.wav, shoot.wav
+溜めショット (written by 稿屋 隆) - Track 2, Track 3
+https://dova-s.jp/se/play1202.html
+
+color.wav
+「ピロリ」決定のボタン音・アクセ… (written by Chisato Kimura)
+https://dova-s.jp/se/play1370.html
+
+skill.wav
+システム　決定音 (written by zmino)
+https://dova-s.jp/se/play1057.html
+
+revive.wav
+ボタン押下音０１ (written by Takumi Higashi)
+https://dova-s.jp/se/play216.html
+
+pang.wav, pong.wav
+LAPUTA counter (written by 稿屋 隆) - Track 2
+https://dova-s.jp/se/play060.html
+
+score_up.wav, score_down.wav
+ブロック崩し (written by 稿屋 隆) - Track 2, Track 3
+https://dova-s.jp/se/play1183.html

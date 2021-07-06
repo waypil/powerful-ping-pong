@@ -122,8 +122,12 @@ class Title(Game):
         """
         super().init(), Time.off(), Game.assign_class_variable_saves()
 
+        pg.mixer.Channel(1).stop(), pg.mixer.Channel(2).stop()
+        pg.mixer.Channel(0).play(BGM.s['title'])
+
     def create(self):
         super().create()
+
         self.select_player = \
             PackSelectPlayer('select_player', tl_px(18, 9), TOPLEFT)
 
@@ -138,14 +142,14 @@ class Title(Game):
         if Score.best_time[EASY] == 0:
             self.font[rc8(-3.5, 4)][GRAY](f"EASY: ---.--")
         else:
-            self.font[rc8(-3.5, 4)](
-                f"EASY: {str(Score.best_time[EASY]).rjust(6, ' ')}")
+            p = f"EASY: {'{:.2f}'.format(Score.best_time[EASY]).rjust(6, ' ')}"
+            self.font[rc8(-3.5, 4)](p)
 
         if Score.best_time[HARD] == 0:
             self.font[rc8(-3.5, 5)][GRAY](f"HARD: ---.--")
         else:
-            self.font[rc8(-3.5, 5)](
-                f"HARD: {str(Score.best_time[HARD]).rjust(6, ' ')}")
+            p = f"HARD: {'{:.2f}'.format(Score.best_time[HARD]).rjust(6, ' ')}"
+            self.font[rc8(-3.5, 5)](p)
 
         if Player.saves:
             self.font[rc8(-2, -2.2)]("SELECT YOUR COLOR.  →")
@@ -157,6 +161,12 @@ class Title(Game):
         else:
             self.font[rc8(-2.5, -1)]("SELECT YOUR POSITION.  →")
 
+    def off(self):
+        super().off()
+        pg.mixer.Channel(0).stop()
+        pg.mixer.Channel(1).stop()
+        pg.mixer.Channel(2).stop()
+
 
 class Stage(Game):
     def create(self):
@@ -167,6 +177,15 @@ class Stage(Game):
 
     def init(self):
         Time.off(), super().init(), Score.reset(), Time.start()
+
+        if Rival.hard_mode:
+            if not pg.mixer.Channel(2).get_busy():
+                pg.mixer.Channel(1).stop()
+                pg.mixer.Channel(2).play(BGM.s['game2'])
+        else:
+            if not pg.mixer.Channel(1).get_busy():
+                pg.mixer.Channel(2).stop()
+                pg.mixer.Channel(1).play(BGM.s['game1'])
 
     def update(self):
         super().update(), collision_check(self.objs), apply_dxdy(self.objs)
@@ -207,6 +226,8 @@ class End(Game):
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
     Game.assign_class_variable_image(), Game.assign_class_variable_copied()
+    Sound.init(), BGM.init()
+
     Score.load()
 
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')

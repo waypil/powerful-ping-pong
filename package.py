@@ -96,10 +96,14 @@ class PackCredits(Package):
     def update(self):
         super().update()
         if self.button.is_pushed:
-            Invisible.all(True, self.button)
-            self.popup.hide(False)
+            if not pg.mixer.Channel(3).get_busy():
+                pg.mixer.Channel(0).stop()
+                pg.mixer.Channel(3).play(BGM.s['credits'])
+            Invisible.all(True, self.button), self.popup.hide(False)
             self.button.sentence = "  CLOSE  "
         else:
-            Invisible.all(False, self.button)
-            self.popup.hide()
+            if not pg.mixer.Channel(0).get_busy():
+                pg.mixer.Channel(3).stop()
+                pg.mixer.Channel(0).play(BGM.s['title'])
+            Invisible.all(False, self.button), self.popup.hide()
             self.button.sentence = self.default_sentence

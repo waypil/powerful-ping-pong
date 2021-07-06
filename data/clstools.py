@@ -184,3 +184,45 @@ class Image:
                 for col in arr]
         arr = np.array([[[avg, avg, avg] for avg in col] for col in avgs])
         return pg.surfarray.make_surface(arr)
+
+
+class Sound:
+    path = f"./resources/{__qualname__.lower()}s"
+    s = {}
+
+    @classmethod
+    def init(cls):
+        cls.create_sound_dict()
+
+    @classmethod
+    def create_sound_dict(cls):
+        for sound_name in cls.__search_file_names():
+            sound = pg.mixer.Sound(f"{cls.path}/{sound_name}")
+            name, _extension_ = sound_name.split('.')  # 이름, 확장자(wav)
+            cls.s[name] = sound
+
+    @classmethod
+    def __search_file_names(cls):
+        for _path_, _subfolder_names_, file_names in os.walk(cls.path):
+            return file_names
+
+
+class BGM:
+    path = f"./resources/{__qualname__.lower()}s"
+    s = {}
+
+    @classmethod
+    def init(cls):
+        cls.create_sound_dict()
+
+    @classmethod
+    def create_sound_dict(cls):
+        for sound_name in cls.__search_file_names():
+            sound = pg.mixer.Sound(f"{cls.path}/{sound_name}")
+            name, _extension_ = sound_name.split('.')  # 이름, 확장자(wav)
+            cls.s[name] = sound
+
+    @classmethod
+    def __search_file_names(cls):
+        for _path_, _subfolder_names_, file_names in os.walk(cls.path):
+            return file_names

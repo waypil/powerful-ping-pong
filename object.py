@@ -274,14 +274,19 @@ class Ball(Obj):
                 Score.plus(LEFT)
             self.reset()  # 초기 위치로 재배치
 
-    def avoid_verticality(self):  # 각도가 너무 수직일 경우, 살짝 기울여줌
+    def avoid_verticality(self):  # 각도가 너무 수직일 경우, 살짝 기울임
         north, south = math.pi * 1 / 2, math.pi * 3 / 2
-        if abs(self.radian - north) < 0.1 or abs(self.radian - south) < 0.1:
-            self.radian = random.choice([self.radian + 0.1, self.radian - 0.1])
+        revision = 0.01  # 보정치
+
+        if abs(self.radian - north) < revision or \
+                abs(self.radian - south) < revision:
+            self.radian = random.choice(
+                [self.radian + revision, self.radian - revision])
 
     def bounce(self, obj):  # 튕기기 함수.
         if obj not in self.coll.last:
             if obj.clsname('Paddle'):
+                Sound.s['pang'].play()
                 if obj.move_log[UP]:
                     target_rect = rect_xy_copy(self.rect, dy=-obj.speed * 3)
                 elif obj.move_log[DOWN]:
@@ -291,6 +296,7 @@ class Ball(Obj):
                 self.radian = calculate_radian(target_rect, obj.rect)
 
             elif obj.clsname('Wall'):
+                Sound.s['pong'].play()
                 self.dy = abs(self.dy) if obj.name == TOP else -abs(self.dy)
                 self.radian = math.atan2(-self.dy, self.dx)
 
@@ -422,11 +428,14 @@ class Button(Obj):
         super().update()
         if bool(self.rect.collidepoint(Mouse.pos)):
             if Mouse.event == CLICK_LEFT_DOWN:
-                self.set_sprite(PUSH)
+                self.sound_effect(), self.set_sprite(PUSH)
 
     def button(self, state):
         assert state in ['gray', 'red', 'blue', PUSH, UNPUSH]
         self.set_sprite(state)
+
+    def sound_effect(self):
+        pass
 
 
 class ButtonText(Button):
@@ -468,7 +477,9 @@ class ButtonText(Button):
 
 
 class ButtonSelectColor(Button):
-    """"""
+    def sound_effect(self):
+        super().sound_effect()
+        Sound.s['color'].play()
 
 
 class ButtonSelectLR(Button):
@@ -495,6 +506,10 @@ class ButtonSelectLR(Button):
             self.set_sprite('blue')
             self.red.set_sprite(UNPUSH), self.blue.set_sprite(UNPUSH, '')
 
+    def sound_effect(self):
+        super().sound_effect()
+        Sound.s['button'].play()
+
 
 class Skill(Obj):
     @classmethod
@@ -520,12 +535,16 @@ class Skill(Obj):
         if force_state:
             self.state = force_state
         elif self.state == ON:
+            Sound.s['skill'].play()
             self.state = RUNNING
 
         self.set_sprite(self.state)
 
     def invoke(self):  # 스킬 발동 (자식 class의 맨 마지막 줄에 배치할 것!)
         self.button(OFF)
+
+    def sound_effect(self):
+        pass
 
 
 class BoostBall(Skill):
@@ -534,9 +553,13 @@ class BoostBall(Skill):
         self.players, self.balls = Player.s, Ball.s
 
     def invoke(self):
+        if not pg.mixer.Channel(4).get_busy():
+            pg.mixer.Channel(4).play(Sound.s['charge'])
+
         colls = pg.sprite.groupcollide(self.players, self.balls, False, False)
         if colls:
             for player, ball in colls.items():
+                pg.mixer.Channel(4).stop(), Sound.s['shoot'].play()
                 ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
             super().invoke()
 
@@ -581,10 +604,12 @@ class ReviveBall(Skill):  # 공 부활
         for ball in self.balls:
             if self.player.sprite_is(LEFT):
                 if left_right(ball.rect.right, self.player.rect.left):
+                    Sound.s['revive'].play()
                     ball.radian = 0  # 오른쪽 수직 방향
                     super().invoke()
             else:  # RIGHT
                 if left_right(player.rect.right, ball.rect.left):
+                    Sound.s['revive'].play()
                     ball.radian = math.pi  # 왼쪽 수직 방향
                     super().invoke()
 
@@ -622,6 +647,11 @@ class Score:
 
     @classmethod
     def plus(cls, obj_name, score=1):
+        if Player.get().sprite_is(obj_name):
+            Sound.s['score_up'].play()
+        else:
+            Sound.s['score_down'].play()
+
         cls.s[obj_name] += score
         cls.win_check(), cls.cancel_paddle_skills()
 
