@@ -119,8 +119,9 @@ class Image:
     def create_sprite_dict(self):
         try:
             img_names, csv_name = self.__search_file_names()
-        except TypeError:
-            raise FileNotFoundError(f"{self.path} 폴더가 존재하지 않습니다.")
+        except:
+            os.makedirs(self.path)
+            img_names, csv_name = self.__search_file_names()
 
         if csv_name:
             csv_array, csv_size = load_csv(f"{self.path}/{csv_name}")
