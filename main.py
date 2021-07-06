@@ -1,4 +1,4 @@
-""" Project PPP v1.0.0.1 """
+""" Project PPP v1.0.1 """
 
 from keyinput import *
 
@@ -46,6 +46,7 @@ class Game:
     def apply_system_keys():
         if 'esc' in Key.up:  # 게임 종료
             if SYS.mode('GAME'):
+                Rival.hard_mode = False
                 SYS.mode_change('TITLE')
             else:  # 'TITLE', 'END'
                 pg.quit(), sys.exit()
@@ -137,7 +138,7 @@ class Title(Game):
         super().draw()
         self.font[120][CYAN][rc8(0, -5.5)](GAME_TITLE_NAME)
 
-        self.font[50][rc8(-3.5, 2.5)]("[BEST SCORE]")
+        self.font[50][rc8(-3.5, 2.5)]("[BEST TIME]")
 
         if Score.best_time[EASY] == 0:
             self.font[rc8(-3.5, 4)][GRAY](f"EASY: ---.--")
