@@ -1,4 +1,4 @@
-""" Project PPP v1.0.1 """
+""" Project PPP v1.0.2 """
 
 from object import *
 

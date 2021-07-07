@@ -1,4 +1,4 @@
-""" Project PPP v1.0.1 """
+""" Project PPP v1.0.2 """
 
 import sys
 
@@ -6,12 +6,8 @@ from package import *
 
 
 class Keyinput:
-    __Lclick = Framewatch('ANTI-MASHING', min_sec=0.2)
-
     @classmethod
     def update(cls):
-        """키 설정
-        """
         Mouse.pos = pg.mouse.get_pos()  # 마우스 커서 좌표 할당
 
         cls.input_keep(pg.key.get_pressed())
