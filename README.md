@@ -50,7 +50,7 @@ for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
 2. 그 클래스들 하나하나에 cls.saves = {} 부여
 
 
-### set_sprite_groups(self):
+### set_obj_groups(self):
 ```
 for subclass in [Obj, Package, Invisible, *get_subclasses(Package), *get_subclasses(Obj, get_supers=False)]:
 ```

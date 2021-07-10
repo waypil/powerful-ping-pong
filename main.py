@@ -25,7 +25,7 @@ class Game:
         for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
             setattr(subclass, 'saves', {})
 
-    def set_sprite_groups(self, init=True):
+    def set_obj_groups(self, init=True):
         """
         Game.__init__() 안에 self.attr_name = pg.sprite.Group() 변수들을 만들고
         그 변수들을 각 class.s에 전달, 서로 공유하도록 만듦.
@@ -65,7 +65,7 @@ class Game:
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        self.set_sprite_groups(), Time.init(), self.create()
+        self.set_obj_groups(), Time.init(), self.create()
 
     def create(self):
         """객체(클래스 인스턴스)를 만드는 전용 공간. init() 안에 배치.
@@ -109,7 +109,7 @@ class Game:
     def off(self):
         """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
-        self.set_sprite_groups()
+        self.set_obj_groups()
 
 
 class Title(Game):

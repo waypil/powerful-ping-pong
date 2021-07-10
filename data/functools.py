@@ -198,7 +198,7 @@ def list_(*args):  # 모든 item/value들을 1차원 list로 강제 변환
     result = []
 
     for arg in args:
-        if type(arg) in [tuple, list]:
+        if type(arg) in [tuple, list, set, frozenset]:
             result = [*result, *list_(*arg)]
         elif type(arg) is dict:
             result = [*result, *list_(*arg.values())]
@@ -206,6 +206,18 @@ def list_(*args):  # 모든 item/value들을 1차원 list로 강제 변환
             result.append(arg)
 
     return result
+
+
+def tuple_(*args):
+    return tuple(list_(*args))
+
+
+def set_(*args):
+    return set(list_(*args))
+
+
+def frozenset_(*args):
+    return frozenset(list_(*args))
 
 
 def batch(set_a, logical_operator: str, set_b):

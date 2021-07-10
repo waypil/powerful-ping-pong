@@ -18,6 +18,7 @@ COLL_CHECK_EXCEPTION = ('Field', 'Skill')
 
 SAVE, LOAD = 'save', 'load'
 EASY, NORMAL, HARD = 'easy', 'normal', 'hard'
+DEFALUT = 'default'
 
 # Debug status: processing_time_gauge()
 DANGER, WARNING = 'DANGER', 'WARNING'
