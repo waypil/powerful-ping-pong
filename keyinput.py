@@ -1,4 +1,4 @@
-""" Project PPP v1.0.2 """
+""" Powerful Ping-Pong v1.0.3 """
 
 import sys
 

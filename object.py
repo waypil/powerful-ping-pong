@@ -1,4 +1,4 @@
-""" Project PPP v1.0.2 """
+""" Powerful Ping-Pong v1.0.3 """
 
 import pickle
 
@@ -608,7 +608,7 @@ class ReviveBall(Skill):  # 공 부활
                     ball.radian = 0  # 오른쪽 수직 방향
                     super().invoke()
             else:  # RIGHT
-                if left_right(player.rect.right, ball.rect.left):
+                if left_right(self.player.rect.right, ball.rect.left):
                     Sound.s['revive'].play()
                     ball.radian = math.pi  # 왼쪽 수직 방향
                     super().invoke()
