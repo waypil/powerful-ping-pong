@@ -395,8 +395,6 @@ class Player(Paddle):
 
 
 class Rival(Paddle):
-    hard_mode = False
-
     def __init__(self):
         super().__init__('gray', (0, 0), TOPLEFT)
         xy, point = self.__class__.pos[self.__class__.saves['name']]
@@ -410,12 +408,12 @@ class Rival(Paddle):
         if abs(self.rect.centery - Ball.get().rect.centery) <= TILE_LENGTH:
             pass
         elif up_down(self.rect, Ball.get().rect):
-            if self.__class__.hard_mode:
+            if SYS.hard_mode:
                 self.move(DOWN)
             else:
                 self.move(random.choice([DOWN, STOP]))
         else:
-            if self.__class__.hard_mode:
+            if SYS.hard_mode:
                 self.move(UP)
             else:
                 self.move(random.choice([UP, STOP]))
@@ -697,7 +695,7 @@ class Score:
     def save(cls):
         if cls.win and 'Player' in cls.win:
             sec = Time.convert(2)
-            if Rival.hard_mode:
+            if SYS.hard_mode:
                 if cls.best_time[HARD] == 0:
                     cls.best_time[HARD] = sec
                 else:  # 과거 베스트 타임이 이미 존재한다면

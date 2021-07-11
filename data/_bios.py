@@ -20,6 +20,8 @@ class SYS:
     __mode_temp = None
     rect = Rect(0, 0, 1280, 720)
 
+    hard_mode = False
+
     @classmethod
     def mode(cls, *modes):
         if modes:

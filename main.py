@@ -46,7 +46,7 @@ class Game:
     def apply_system_keys():
         if 'esc' in Key.up:  # 게임 종료
             if SYS.mode('GAME'):
-                Rival.hard_mode = False
+                SYS.hard_mode = False
                 SYS.mode_change('TITLE')
             else:  # 'TITLE', 'END'
                 pg.quit(), sys.exit()
@@ -177,7 +177,7 @@ class Stage(Game):
     def init(self):
         Time.off(), super().init(), Score.reset(), Time.start()
 
-        if Rival.hard_mode:
+        if SYS.hard_mode:
             Audio.exchange(BGM.s['game1'], BGM.s['game2'])
         else:
             Audio.exchange(BGM.s['game2'], BGM.s['game1'])
@@ -212,10 +212,10 @@ class End(Game):
 
         if 'Player' in Score.win:
             self.font[rc8(0, 4)]("PRESS ENTER TO CHALLENGE THE HARD MODE.")
-            Rival.hard_mode = True
+            SYS.hard_mode = True
         elif 'Rival' in Score.win:
             self.font[rc8(0, 4)]("PRESS ENTER TO TRY AGAIN.")
-            Rival.hard_mode = False
+            SYS.hard_mode = False
 
 
 if __name__ == '__main__':
