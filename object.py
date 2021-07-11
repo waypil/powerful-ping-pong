@@ -70,14 +70,20 @@ class Obj(pg.sprite.Sprite):
     def hide_temp(self, make_sprite_invisible: bool = True):
         Obj.s.remove(self) if make_sprite_invisible else Obj.s.add(self)
 
-    def clsname(self, compare_name=''):  # class name
+    def clsname(self, compare_name='', get_super=False):  # class name
         if compare_name:
             if self.__class__.__name__ == compare_name:
                 return True
             else:  # 부모 클래스
                 return self.__class__.__bases__[0].__name__ == compare_name
         else:
-            return self.__class__.__name__
+            if get_super:  # return superclass name
+                if self.__class__.__bases__[0].__name__ == 'Obj':
+                    return self.__class__.__name__
+                else:
+                    return self.__class__.__bases__[0].__name__
+            else:
+                return self.__class__.__name__
 
     def set_sprite(self, *keywords):
         if keywords:
