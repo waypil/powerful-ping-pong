@@ -187,16 +187,58 @@ class Image:
         return pg.surfarray.make_surface(arr)
 
 
-class Sound:
-    path = f"./resources/{__qualname__.lower()}s"
-    s = {}
+class Audio:
+    @classmethod
+    def play(cls, audio, force_loop: bool = None):
+        if force_loop is None:
+            loop = -1 if audio.__class__.__name__ == 'BGM' else 0
+        else:
+            loop = -1 if force_loop else 0
+
+        if not cls.playing_check(audio):
+            for i in range(pg.mixer.get_num_channels() + 1):
+                if pg.mixer.Channel(i).get_sound() is None:
+                    pg.mixer.Channel(i).play(audio, loops=loop)
+                    break
 
     @classmethod
-    def init(cls):
-        cls.create_sound_dict()
+    def playing_check(cls, audio):
+        for i in range(pg.mixer.get_num_channels()):
+            if pg.mixer.Channel(i).get_sound() == audio:
+                return True
+        return False
 
     @classmethod
-    def create_sound_dict(cls):
+    def exchange(cls, audio_a, audio_b, force_loop: bool = None):
+        if force_loop is None:
+            loop = -1 if audio_b.__class__.__name__ == 'BGM' else 0
+        else:
+            loop = -1 if force_loop else 0
+
+        for i in range(pg.mixer.get_num_channels()):
+            if pg.mixer.Channel(i).get_sound() == audio_a:
+                pg.mixer.Channel(i).stop()
+                pg.mixer.Channel(i).play(audio_b, loops=loop)
+                break
+        else:
+            cls.play(audio_b, force_loop)
+
+    @classmethod
+    def stop(cls, audio):
+        for i in range(pg.mixer.get_num_channels()):
+            if pg.mixer.Channel(i).get_sound() == audio:
+                pg.mixer.Channel(i).stop()
+                break
+
+    @classmethod
+    def stop_all(cls):
+        for i in range(pg.mixer.get_num_channels()):
+            pg.mixer.Channel(i).stop()
+
+
+class Load:  # only use in Sound & BGM class
+    @classmethod
+    def init(cls):  # create_sound_dict
         for sound_name in cls.__search_file_names():
             sound = pg.mixer.Sound(f"{cls.path}/{sound_name}")
             name, _extension_ = sound_name.split('.')  # 이름, 확장자(wav)
@@ -208,22 +250,16 @@ class Sound:
             return file_names
 
 
-class BGM:
+class GetItem(type):
+    def __getitem__(cls, name):
+        return cls.s[name]
+
+
+class BGM(Load, metaclass=GetItem):
     path = f"./resources/{__qualname__.lower()}s"
     s = {}
 
-    @classmethod
-    def init(cls):
-        cls.create_sound_dict()
 
-    @classmethod
-    def create_sound_dict(cls):
-        for sound_name in cls.__search_file_names():
-            sound = pg.mixer.Sound(f"{cls.path}/{sound_name}")
-            name, _extension_ = sound_name.split('.')  # 이름, 확장자(wav)
-            cls.s[name] = sound
-
-    @classmethod
-    def __search_file_names(cls):
-        for _path_, _subfolder_names_, file_names in os.walk(cls.path):
-            return file_names
+class Sound(Load, metaclass=GetItem):
+    path = f"./resources/{__qualname__.lower()}s"
+    s = {}

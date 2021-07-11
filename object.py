@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.0.3 """
+""" Powerful Ping-Pong v1.0.4 """
 
 import pickle
 
@@ -286,7 +286,7 @@ class Ball(Obj):
     def bounce(self, obj):  # 튕기기 함수.
         if obj not in self.coll.last:
             if obj.clsname('Paddle'):
-                Sound.s['pang'].play()
+                Sound['pang'].play()
                 if obj.move_log[UP]:
                     target_rect = rect_xy_copy(self.rect, dy=-obj.speed * 3)
                 elif obj.move_log[DOWN]:
@@ -296,7 +296,7 @@ class Ball(Obj):
                 self.radian = calculate_radian(target_rect, obj.rect)
 
             elif obj.clsname('Wall'):
-                Sound.s['pong'].play()
+                Sound['pong'].play()
                 self.dy = abs(self.dy) if obj.name == TOP else -abs(self.dy)
                 self.radian = math.atan2(-self.dy, self.dx)
 
@@ -479,7 +479,7 @@ class ButtonText(Button):
 class ButtonSelectColor(Button):
     def sound_effect(self):
         super().sound_effect()
-        Sound.s['color'].play()
+        Sound['color'].play()
 
 
 class ButtonSelectLR(Button):
@@ -508,7 +508,7 @@ class ButtonSelectLR(Button):
 
     def sound_effect(self):
         super().sound_effect()
-        Sound.s['button'].play()
+        Sound['button'].play()
 
 
 class Skill(Obj):
@@ -535,7 +535,7 @@ class Skill(Obj):
         if force_state:
             self.state = force_state
         elif self.state == ON:
-            Sound.s['skill'].play()
+            Sound['skill'].play()
             self.state = RUNNING
 
         self.set_sprite(self.state)
@@ -553,13 +553,12 @@ class BoostBall(Skill):
         self.players, self.balls = Player.s, Ball.s
 
     def invoke(self):
-        if not pg.mixer.Channel(4).get_busy():
-            pg.mixer.Channel(4).play(Sound.s['charge'])
+        Audio.play(Sound['charge'])
 
         colls = pg.sprite.groupcollide(self.players, self.balls, False, False)
         if colls:
             for player, ball in colls.items():
-                pg.mixer.Channel(4).stop(), Sound.s['shoot'].play()
+                Audio.exchange(Sound['charge'], Sound['shoot'])
                 ball[0].speed *= 5  # ball이 [*ball] 꼴로 출력되기 때문
             super().invoke()
 
@@ -604,12 +603,12 @@ class ReviveBall(Skill):  # 공 부활
         for ball in self.balls:
             if self.player.sprite_is(LEFT):
                 if left_right(ball.rect.right, self.player.rect.left):
-                    Sound.s['revive'].play()
+                    Sound['revive'].play()
                     ball.radian = 0  # 오른쪽 수직 방향
                     super().invoke()
             else:  # RIGHT
                 if left_right(self.player.rect.right, ball.rect.left):
-                    Sound.s['revive'].play()
+                    Sound['revive'].play()
                     ball.radian = math.pi  # 왼쪽 수직 방향
                     super().invoke()
 
@@ -648,9 +647,9 @@ class Score:
     @classmethod
     def plus(cls, obj_name, score=1):
         if Player.get().sprite_is(obj_name):
-            Sound.s['score_up'].play()
+            Sound['score_up'].play()
         else:
-            Sound.s['score_down'].play()
+            Sound['score_down'].play()
 
         cls.s[obj_name] += score
         cls.win_check(), cls.cancel_paddle_skills()

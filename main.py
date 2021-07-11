@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.0.3 """
+""" Powerful Ping-Pong v1.0.4 """
 
 from keyinput import *
 
@@ -123,8 +123,8 @@ class Title(Game):
         """
         super().init(), Time.off(), Game.assign_class_variable_saves()
 
-        pg.mixer.Channel(1).stop(), pg.mixer.Channel(2).stop()
-        pg.mixer.Channel(0).play(BGM.s['title'])
+        Audio.stop_all()
+        Audio.play(BGM['title'])
 
     def create(self):
         super().create()
@@ -164,9 +164,7 @@ class Title(Game):
 
     def off(self):
         super().off()
-        pg.mixer.Channel(0).stop()
-        pg.mixer.Channel(1).stop()
-        pg.mixer.Channel(2).stop()
+        Audio.stop_all()
 
 
 class Stage(Game):
@@ -180,13 +178,9 @@ class Stage(Game):
         Time.off(), super().init(), Score.reset(), Time.start()
 
         if Rival.hard_mode:
-            if not pg.mixer.Channel(2).get_busy():
-                pg.mixer.Channel(1).stop()
-                pg.mixer.Channel(2).play(BGM.s['game2'])
+            Audio.exchange(BGM.s['game1'], BGM.s['game2'])
         else:
-            if not pg.mixer.Channel(1).get_busy():
-                pg.mixer.Channel(2).stop()
-                pg.mixer.Channel(1).play(BGM.s['game1'])
+            Audio.exchange(BGM.s['game2'], BGM.s['game1'])
 
     def update(self):
         super().update(), collision_check(self.objs), apply_dxdy(self.objs)
@@ -227,7 +221,7 @@ class End(Game):
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
     Game.assign_class_variable_image(), Game.assign_class_variable_copied()
-    Sound.init(), BGM.init()
+    BGM.init(), Sound.init()
 
     Score.load()
 

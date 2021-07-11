@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.0.3 """
+""" Powerful Ping-Pong v1.0.4 """
 
 from object import *
 
@@ -96,14 +96,10 @@ class PackCredits(Package):
     def update(self):
         super().update()
         if self.button.is_pushed:
-            if not pg.mixer.Channel(3).get_busy():
-                pg.mixer.Channel(0).stop()
-                pg.mixer.Channel(3).play(BGM.s['credits'])
+            Audio.exchange(BGM['title'], BGM['credits'])
             Invisible.all(True, self.button), self.popup.hide(False)
             self.button.sentence = "  CLOSE  "
         else:
-            if not pg.mixer.Channel(0).get_busy():
-                pg.mixer.Channel(3).stop()
-                pg.mixer.Channel(0).play(BGM.s['title'])
+            Audio.exchange(BGM['credits'], BGM['title'])
             Invisible.all(False, self.button), self.popup.hide()
             self.button.sentence = self.default_sentence
