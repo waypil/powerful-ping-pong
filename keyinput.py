@@ -44,6 +44,11 @@ class Keyinput:
         else:
             remove(Key.keep, 'a')
 
+        if key[pg.K_b]:
+            append(Key.keep, 'b')
+        else:
+            remove(Key.keep, 'b')
+
         if key[pg.K_c]:
             append(Key.keep, 'c')
         else:
@@ -54,10 +59,95 @@ class Keyinput:
         else:
             remove(Key.keep, 'd')
 
+        if key[pg.K_e]:
+            append(Key.keep, 'e')
+        else:
+            remove(Key.keep, 'e')
+
+        if key[pg.K_f]:
+            append(Key.keep, 'f')
+        else:
+            remove(Key.keep, 'f')
+
+        if key[pg.K_g]:
+            append(Key.keep, 'g')
+        else:
+            remove(Key.keep, 'g')
+
+        if key[pg.K_h]:
+            append(Key.keep, 'h')
+        else:
+            remove(Key.keep, 'h')
+
+        if key[pg.K_i]:
+            append(Key.keep, 'i')
+        else:
+            remove(Key.keep, 'i')
+
+        if key[pg.K_j]:
+            append(Key.keep, 'j')
+        else:
+            remove(Key.keep, 'j')
+
+        if key[pg.K_k]:
+            append(Key.keep, 'k')
+        else:
+            remove(Key.keep, 'k')
+
+        if key[pg.K_l]:
+            append(Key.keep, 'l')
+        else:
+            remove(Key.keep, 'l')
+
+        if key[pg.K_m]:
+            append(Key.keep, 'm')
+        else:
+            remove(Key.keep, 'm')
+
+        if key[pg.K_n]:
+            append(Key.keep, 'n')
+        else:
+            remove(Key.keep, 'n')
+
+        if key[pg.K_o]:
+            append(Key.keep, 'o')
+        else:
+            remove(Key.keep, 'o')
+
+        if key[pg.K_p]:
+            append(Key.keep, 'p')
+        else:
+            remove(Key.keep, 'p')
+
+        if key[pg.K_q]:
+            append(Key.keep, 'q')
+        else:
+            remove(Key.keep, 'q')
+
+        if key[pg.K_r]:
+            append(Key.keep, 'r')
+        else:
+            remove(Key.keep, 'r')
+
         if key[pg.K_s]:
             append(Key.keep, 's')
         else:
             remove(Key.keep, 's')
+
+        if key[pg.K_t]:
+            append(Key.keep, 't')
+        else:
+            remove(Key.keep, 't')
+
+        if key[pg.K_u]:
+            append(Key.keep, 'u')
+        else:
+            remove(Key.keep, 'u')
+
+        if key[pg.K_v]:
+            append(Key.keep, 'v')
+        else:
+            remove(Key.keep, 'v')
 
         if key[pg.K_w]:
             append(Key.keep, 'w')
@@ -68,6 +158,11 @@ class Keyinput:
             append(Key.keep, 'x')
         else:
             remove(Key.keep, 'x')
+
+        if key[pg.K_y]:
+            append(Key.keep, 'y')
+        else:
+            remove(Key.keep, 'y')
 
         if key[pg.K_z]:
             append(Key.keep, 'z')
@@ -123,16 +218,54 @@ class Keyinput:
                 append(Key.down, 'right')
             elif event.key == pg.K_a:
                 append(Key.down, 'a')
-            elif event.key == pg.K_d:
-                append(Key.down, 'd')
+            elif event.key == pg.K_b:
+                append(Key.down, 'b')
             elif event.key == pg.K_c:
                 append(Key.down, 'c')
+            elif event.key == pg.K_d:
+                append(Key.down, 'd')
+            elif event.key == pg.K_e:
+                append(Key.down, 'e')
+            elif event.key == pg.K_f:
+                append(Key.down, 'f')
+            elif event.key == pg.K_g:
+                append(Key.down, 'g')
+            elif event.key == pg.K_h:
+                append(Key.down, 'h')
+            elif event.key == pg.K_i:
+                append(Key.down, 'i')
+            elif event.key == pg.K_j:
+                append(Key.down, 'j')
+            elif event.key == pg.K_k:
+                append(Key.down, 'k')
+            elif event.key == pg.K_l:
+                append(Key.down, 'l')
+            elif event.key == pg.K_m:
+                append(Key.down, 'm')
+            elif event.key == pg.K_n:
+                append(Key.down, 'n')
+            elif event.key == pg.K_o:
+                append(Key.down, 'o')
+            elif event.key == pg.K_p:
+                append(Key.down, 'p')
+            elif event.key == pg.K_q:
+                append(Key.down, 'q')
+            elif event.key == pg.K_r:
+                append(Key.down, 'r')
             elif event.key == pg.K_s:
                 append(Key.down, 's')
+            elif event.key == pg.K_t:
+                append(Key.down, 't')
+            elif event.key == pg.K_u:
+                append(Key.down, 'u')
+            elif event.key == pg.K_v:
+                append(Key.down, 'v')
             elif event.key == pg.K_w:
                 append(Key.down, 'w')
             elif event.key == pg.K_x:
                 append(Key.down, 'x')
+            elif event.key == pg.K_y:
+                append(Key.down, 'y')
             elif event.key == pg.K_z:
                 append(Key.down, 'z')
             elif event.key in [pg.K_1, pg.K_KP1]:
@@ -159,16 +292,54 @@ class Keyinput:
                 append(Key.up, 'right')
             elif event.key == pg.K_a:
                 append(Key.up, 'a')
+            elif event.key == pg.K_b:
+                append(Key.up, 'b')
             elif event.key == pg.K_c:
                 append(Key.up, 'c')
             elif event.key == pg.K_d:
                 append(Key.up, 'd')
+            elif event.key == pg.K_e:
+                append(Key.up, 'e')
+            elif event.key == pg.K_f:
+                append(Key.up, 'f')
+            elif event.key == pg.K_g:
+                append(Key.up, 'g')
+            elif event.key == pg.K_h:
+                append(Key.up, 'h')
+            elif event.key == pg.K_i:
+                append(Key.up, 'i')
+            elif event.key == pg.K_j:
+                append(Key.up, 'j')
+            elif event.key == pg.K_k:
+                append(Key.up, 'k')
+            elif event.key == pg.K_l:
+                append(Key.up, 'l')
+            elif event.key == pg.K_m:
+                append(Key.up, 'm')
+            elif event.key == pg.K_n:
+                append(Key.up, 'n')
+            elif event.key == pg.K_o:
+                append(Key.up, 'o')
+            elif event.key == pg.K_p:
+                append(Key.up, 'p')
+            elif event.key == pg.K_q:
+                append(Key.up, 'q')
+            elif event.key == pg.K_r:
+                append(Key.up, 'r')
             elif event.key == pg.K_s:
                 append(Key.up, 's')
+            elif event.key == pg.K_t:
+                append(Key.up, 't')
+            elif event.key == pg.K_u:
+                append(Key.up, 'u')
+            elif event.key == pg.K_v:
+                append(Key.up, 'v')
             elif event.key == pg.K_w:
                 append(Key.up, 'w')
             elif event.key == pg.K_x:
                 append(Key.up, 'x')
+            elif event.key == pg.K_y:
+                append(Key.up, 'y')
             elif event.key == pg.K_z:
                 append(Key.up, 'z')
             elif event.key in [pg.K_1, pg.K_KP1]:

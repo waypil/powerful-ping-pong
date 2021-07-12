@@ -363,11 +363,11 @@ class Player(Paddle):
         self.rect = set_rect(self.image, xy, point=point)
 
         self.skill = {}
-        self.init_skills(BoostBall, IncreaseBall, ReviveBall)
+        self.init_skills(BoostBall, IncreaseBall, ReviveBall, WarpPaddle)
 
-        self.control = {UP: [UP, 'w'], DOWN: [DOWN, 's'],
-                        'Skill1': ['z', '1'], 'Skill2': ['x', '2'],
-                        'Skill3': ['c', '3']
+        self.control = {UP: [UP], DOWN: [DOWN],
+                        'Skill1': ['z', 'q'], 'Skill2': ['x', 'w'],
+                        'Skill3': ['c', 'e'], 'Skill4': ['v', 'r']
                         }
 
     def apply_keys(self):
@@ -382,6 +382,8 @@ class Player(Paddle):
             self.skill[2].button()
         if batch(self.control['Skill3'], OR, Key.down):
             self.skill[3].button()
+        if batch(self.control['Skill4'], OR, Key.down):
+            self.skill[4].button()
 
     def update(self):
         super().update()
@@ -389,7 +391,7 @@ class Player(Paddle):
     def init_skills(self, *skill_classes):
         for i, skill_class in enumerate(skill_classes, start=1):
             if self.sprite_is(LEFT):
-                self.skill[i] = skill_class(tl_px(4 + i * 2, 16), TOPLEFT)
+                self.skill[i] = skill_class(tl_px(2 + i * 2, 16), TOPLEFT)
             else:  # RIGHT
                 self.skill[i] = skill_class(tl_px(18 + i * 2, 16), TOPLEFT)
 
@@ -615,6 +617,64 @@ class ReviveBall(Skill):  # 공 부활
                     Sound['revive'].play()
                     ball.radian = math.pi  # 왼쪽 수직 방향
                     super().invoke()
+
+
+class WarpPaddle(Skill):  # 공이 있는 높이로 Paddle 워프
+    def __init__(self, xy: tuple, point):
+        super().__init__(xy, point)
+        self.player, self.balls = None, Ball.s
+
+    def update(self):
+        self.player = Player.get()
+        super().update()
+
+    def invoke(self):  # 스킬 발동
+        distances, balls = [], []
+
+        for ball in self.balls:
+            distances.append(abs(self.player.rect.centerx - ball.rect.centerx))
+            balls.append(ball)
+
+        nearest_ball = balls[distances.index(min(distances))]
+        self.player.rect.centery = nearest_ball.rect.centery
+        super().invoke()
+
+
+# class SpeedUpPaddle(Skill):
+#     def __init__(self, xy: tuple, point):
+#         super().__init__(xy, point)
+#         self.player = None
+#         self.is_available = True
+#
+#     def update(self):
+#         self.player = Player.get()
+#         super().update()
+#
+#     def invoke(self):  # 스킬 발동
+#         if self.is_available:
+#             self.player.speed *= 2
+#             self.is_available = False
+#         else:
+#             pass
+#             super().invoke()
+#
+#
+# class SpeedDownPaddle(Skill):
+#     def __init__(self, xy: tuple, point):
+#         super().__init__(xy, point)
+#         self.rival = None
+#         self.is_available = True
+#
+#     def update(self):
+#         self.rival = Rival.get()
+#         super().update()
+#
+#     def invoke(self):  # 스킬 발동
+#         if self.is_used:
+#             pass
+#             super().invoke()
+#         else:
+#             self.player.speed //= 2
 
 
 class Invisible(pg.sprite.Sprite):
