@@ -27,10 +27,13 @@ class Framewatch:
             watch.tick(force)
 
     def __init__(self, preset_frame=0, immediate_start=False):
-        append(self.__class__.s, self)
+        if self not in self.__class__.s:  # 중복 담기 방지
+            self.__class__.s.append(self)
+
         self._elapse = self.DeciFrame()
         self.now = self.preset = preset_frame
         self.running = False
+
         if immediate_start:
             self.start()
 
