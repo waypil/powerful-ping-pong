@@ -1,6 +1,6 @@
 """ Tools consist of methods of class """
 
-from data.functools import *
+from data.tools import *
 
 
 class Collision:
@@ -15,83 +15,6 @@ class Collision:
 
     def all_clear(self):
         self.last, self.now = [], []
-
-
-class Framewatch:
-    """Default is 100 fps.
-    """
-    now = 0
-
-    @classmethod
-    def tick(cls):
-        cls.now += 1
-
-    def __init__(self, mode, min_sec=0, max_sec=0):
-        if 0 < min_sec < 0.01 or 0 < max_sec < 0.01:
-            raise ValueError(
-                "min_sec/max_sec in Framewatch.__init__() must be large number than 0.01.max")
-
-        self.mode = mode
-        self.min_limit = int(min_sec * 100)  # use in 'ANTI-MASHING'
-        self.max_limit = int(max_sec * 100)  # use in 'TIMER'
-
-        self.running = False
-        self.__preset = 0
-        self.__checkpoint = None
-
-    def check(self):  # 'TIMER' 모드에서 check를 안 하면 스톱워치가 됨.
-        if self.mode == 'TIMER':
-            if self.running:
-                if self.max_limit == 0 or self.get_elapsed() < self.max_limit:
-                    return True
-                else:  # 제한 시간 초과
-                    self.off()
-                    print("\nTime is over!\n")
-                    return False
-            else:
-                return False
-
-        elif self.mode == 'ANTI-MASHING':  # 연타 방지 센서 (RestrictButtonMashing)
-            elapsed = self.get_elapsed()
-            if elapsed == 0:
-                self.start()
-                return True  # True: 연타 허용
-            elif elapsed >= self.min_limit:
-                self.reset()
-                return True  # True: 연타 허용
-            else:
-                return False  # False: 연타 불허
-        else:
-            raise ValueError(
-                "Please input mode='TIMER' or mode='ANTI-MASHING'")
-
-    def get_elapsed(self):
-        """현재까지의 스톱워치 재생 시간 취득arrange
-        """
-        elapsed = self.__preset
-        if self.running:
-            elapsed = self.__class__.now - self.__checkpoint
-        return elapsed
-
-    def start(self):  # 스톱워치 시작 (+resume)
-        if not self.running:
-            self.running = True
-            self.__checkpoint = self.__class__.now
-
-    def pause(self):  # 스톱워치 일시정지 (게임 일시정지 시 사용)
-        if self.running:
-            self.running = False
-            self.__preset += self.__class__.now - self.__checkpoint
-
-    def reset(self, start_frame=0):
-        if self.running:
-            self.__preset = start_frame
-            self.__checkpoint = self.__class__.now - start_frame
-
-    def off(self):
-        self.running = False
-        self.__preset = 0
-        self.__checkpoint = None
 
 
 class Image:

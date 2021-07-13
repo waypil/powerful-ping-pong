@@ -1,8 +1,9 @@
-""" Powerful Ping-Pong v1.0.4 """
+""" Powerful Ping-Pong v1.2.0 """
 
 import pickle
 
 from data.clstools import *
+from data.framewatch import *
 
 
 class Obj(pg.sprite.Sprite):
@@ -175,71 +176,6 @@ class Text(Obj):
         self.color, self.bg = self.default_color, self.default_bg
 
 
-class Time:  # Framewatch를 객체화한 클래스.
-    __font = None
-    __clock = Framewatch('TIMER')
-    most = 0
-    current = 0  # current frame
-
-    @classmethod
-    def init(cls):
-        cls.__font = Text('GenShinGothic-Monospace-Bold', 36, GREEN)
-
-    @classmethod
-    def update(cls):
-        cls.__clock.tick()
-        cls.current = cls.__clock.get_elapsed()
-        cls.most = max(cls.most, cls.current)
-
-    @classmethod
-    def draw(cls, convert_frame_to_second=False, ndigits=0):
-        if convert_frame_to_second:
-            seconds = cls.convert(ndigits)
-        else:
-            seconds = cls.current  # deciseconds
-
-        cls.__font[rc8(0, 7.2)](seconds)
-
-    @classmethod
-    def convert(cls, ndigits=0):
-        if ndigits == 0:
-            seconds = cls.current // 100  # 0초
-        elif ndigits == 1:
-            seconds = cls.current // 10 / 10  # 0.0초
-        elif ndigits == 2:
-            seconds = cls.current / 100  # 0.00초
-        else:
-            raise ValueError("Time.convert(ndigits=) must be integer 1/2/3")
-        return seconds
-
-    @classmethod
-    def get(cls, adjust_frame: int = 0):
-        return cls.current + adjust_frame
-
-    @classmethod
-    def start(cls):
-        cls.__clock.start()
-
-    @classmethod
-    def reset(cls, start_seconds):
-        cls.current = start_seconds * 100
-        cls.__clock.reset(cls.current)
-
-    @classmethod
-    def pause(cls):  # 스톱워치 일시정지 (게임 일시정지 시 사용)
-        cls.__clock.pause()
-
-    @classmethod
-    def off(cls):
-        cls.__clock.off()
-        cls.current = 0
-
-    @classmethod
-    def go(cls, warp_seconds):
-        cls.current = max(0, cls.current + warp_seconds * 100)
-        cls.__clock.reset(cls.current)
-
-
 class Field(Obj):
     def __init__(self, name):
         super().__init__(name)
@@ -256,16 +192,16 @@ class Wall(Obj):
 
 
 class Ball(Obj):
-    def __init__(self, name, xy: tuple, point):
+    def __init__(self, name, xy: tuple, point, delay_sec):
         super().__init__(name, xy, point)
         self.init_rect = set_rect(self.image, SYS.rect.center, point=CENTER)
         self.speed = 5  # default
         self.radian = random_radian()
-        self.delay = Time.get()
+        self.timer = Timer(True, delay_sec, immediate_start=True)
 
     def update(self):
         super().update()
-        if Time.get() - self.delay > 100:
+        if self.timer():
             self.move()
 
     def move(self):
@@ -306,14 +242,14 @@ class Ball(Obj):
                 self.dy = abs(self.dy) if obj.name == TOP else -abs(self.dy)
                 self.radian = math.atan2(-self.dy, self.dx)
 
-            self.speed += 0.3  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
+            self.speed += 0.5  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
             self.coll.last = [obj]
 
     def reset(self):  # 장외 아웃
         if len(Ball.s) >= 2:
             self.kill()
         else:
-            self.delay = Time.get()
+            self.timer.reset(immediate_start=True)
             self.rect = self.init_rect.copy()
             self.dx, self.dy = 0, 0
             self.speed, self.radian = 5, random_radian()
@@ -584,10 +520,9 @@ class IncreaseBall(Skill):  # obj 증식
         else:  # RIGHT
             invocable_area = left_right(SYS.rect.center, self.ball.rect.center)
 
-        if invocable_area and Time.get(-self.ball.delay) > 100:
-            ball2 = Ball('ball', self.ball.rect.center, CENTER)
-            ball3 = Ball('ball', self.ball.rect.center, CENTER)
-            ball2.delay = ball3.delay = Time.get(-100)
+        if invocable_area and self.ball.timer():
+            ball2 = Ball('ball', self.ball.rect.center, CENTER, [0, 1])
+            ball3 = Ball('ball', self.ball.rect.center, CENTER, [0, 1])
             ball2.speed = ball3.speed = self.ball.speed
             ball2.radian = self.ball.radian + math.pi / 6  # 시계 반대 방향
             ball3.radian = self.ball.radian - math.pi / 6  # 시계 방향
@@ -754,7 +689,7 @@ class Score:
     @classmethod
     def save(cls):
         if cls.win and 'Player' in cls.win:
-            sec = Time.convert(2)
+            sec = SYS.playtime
             if SYS.hard_mode:
                 if cls.best_time[HARD] == 0:
                     cls.best_time[HARD] = sec
@@ -768,6 +703,8 @@ class Score:
 
             with open('data.pickle', 'wb') as savefile:  # 파일로 저장
                 pickle.dump(cls.best_time, savefile)
+
+            SYS.playtime = None
 
     @classmethod
     def load(cls):

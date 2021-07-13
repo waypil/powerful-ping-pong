@@ -1,11 +1,11 @@
-""" Powerful Ping-Pong v1.0.4 """
+""" Powerful Ping-Pong v1.2.0 """
 
 from keyinput import *
 
 
 """ [Import Order]
 * main > keyinput > package > object > /data/
-* /data/: clstools > functools > _bios > _constants
+* /data/: clstools/framewatch > tools > _bios > _constants
 """
 
 
@@ -60,18 +60,22 @@ class Game:
 
     def __init__(self, name):
         self.name = name
+        self.clock = Stopwatch()
+
         self.font = None
+        self.font_clock = None
 
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        self.set_obj_groups(), Time.init(), self.create()
+        self.set_obj_groups(), self.create()
 
     def create(self):
         """객체(클래스 인스턴스)를 만드는 전용 공간. init() 안에 배치.
         """
         self.font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER,
                          BLACK)
+        self.font_clock = Text('GenShinGothic-Monospace-Bold', 36, GREEN)
 
     def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
@@ -83,12 +87,11 @@ class Game:
         """
         Screen.on.fill(BLACK), self.objs.draw(Screen.on)
 
-    @classmethod
-    def time(cls):
-        Time.update()  # 프레임 시간 +0.01초
+    def time(self):
+        Framewatch.tick_all()  # 프레임 시간 +0.01초
 
-        if Time.get() != 0.0:
-            Time.draw(True, 1)  # 프레임 시간(소수점 1자릿수까지)을 화면에 표시
+        if self.clock() != 0:
+            self.font_clock[rc8(0, 7.2)](self.clock.get(1))
 
     def run(self):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
@@ -121,7 +124,7 @@ class Title(Game):
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        super().init(), Time.off(), Game.assign_class_variable_saves()
+        super().init(), self.clock.off(), Game.assign_class_variable_saves()
 
         Audio.stop_all()
         Audio.play(BGM['title'])
@@ -171,11 +174,11 @@ class Stage(Game):
     def create(self):
         super().create()
         Field('black')
-        Ball('ball', SYS.rect.center, point=CENTER)
+        Ball('ball', SYS.rect.center, CENTER, 1)
         Player(), Rival()
 
     def init(self):
-        Time.off(), super().init(), Score.reset(), Time.start()
+        self.clock.off(), super().init(), Score.reset(), self.clock.start()
 
         if SYS.hard_mode:
             Audio.exchange(BGM.s['game1'], BGM.s['game2'])
@@ -184,12 +187,14 @@ class Stage(Game):
 
     def update(self):
         super().update(), collision_check(self.objs), apply_dxdy(self.objs)
+        if Score.win and SYS.playtime is None:
+            SYS.playtime = self.clock(2)
 
     def draw(self):
         super().draw(), Score.draw()
 
     def off(self):
-        super().off(), Time.pause(), Score.save()
+        super().off(), self.clock.pause(), Score.save()
 
 
 class End(Game):

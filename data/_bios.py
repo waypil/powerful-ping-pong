@@ -21,6 +21,7 @@ class SYS:
     rect = Rect(0, 0, 1280, 720)
 
     hard_mode = False
+    playtime = None
 
     @classmethod
     def mode(cls, *modes):
