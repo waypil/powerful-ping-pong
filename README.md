@@ -25,7 +25,7 @@ The Indie Game Project.
 ## Game
   Title, Stage, End의 상위 클래스.
 
-### .assign_class_variable_image():
+### .assign_image_in_subclass():
 ```
 for subclass in get_subclasses(Obj, get_subs=False):
     setattr(subclass, 'sprite', Image(subclass.__name__))
@@ -33,7 +33,7 @@ for subclass in get_subclasses(Obj, get_subs=False):
 1. Obj의 하위 클래스들 중에서 제일 상위 클래스들만 불러옴.
 2. 그 클래스들 하나하나에 cls.sprite = Image(subclass.\_\_name\_\_) 부여
    
-### .assign_class_variable_copied():
+### .assign_copied_in_subclass():
 ```
 for subclass in get_subclasses(Obj, get_supers=False):
     setattr(subclass, 'copied', 0)
@@ -41,7 +41,7 @@ for subclass in get_subclasses(Obj, get_supers=False):
 1. Obj의 하위 클래스들 중에서 제일 하위 클래스들만 불러옴.
 2. 그 클래스들 하나하나에 cls.copied = 0 부여
    
-### .assign_class_variable_saves():
+### .assign_saves_in_subclass():
 ```
 for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
     setattr(subclass, 'saves', {})

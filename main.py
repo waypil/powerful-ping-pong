@@ -11,17 +11,17 @@ from keyinput import *
 
 class Game:
     @staticmethod
-    def assign_class_variable_image():  # 모든 이미지 로드하기
+    def assign_image_in_subclass():  # 모든 이미지 로드하기
         for subclass in get_subclasses(Obj, get_subs=False):
             setattr(subclass, 'sprite', Image(subclass.__name__))
 
     @staticmethod
-    def assign_class_variable_copied():
+    def assign_copied_in_subclass():
         for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
             setattr(subclass, 'copied', 0)
 
     @staticmethod
-    def assign_class_variable_saves():
+    def assign_saves_in_subclass():
         for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
             setattr(subclass, 'saves', {})
 
@@ -124,7 +124,7 @@ class Title(Game):
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        super().init(), self.clock.off(), Game.assign_class_variable_saves()
+        super().init(), self.clock.off(), Game.assign_saves_in_subclass()
 
         Audio.stop_all()
         Audio.play(BGM['title'])
@@ -225,7 +225,7 @@ class End(Game):
 
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
-    Game.assign_class_variable_image(), Game.assign_class_variable_copied()
+    Game.assign_image_in_subclass(), Game.assign_copied_in_subclass()
     BGM.init(), Sound.init()
 
     Score.load()
