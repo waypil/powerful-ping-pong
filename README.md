@@ -1,4 +1,4 @@
-# Powerful Ping-Pong v1.2.0
+# Powerful Ping-Pong v1.3.0
 The Indie Game Project.
 
 # Wait!
@@ -52,7 +52,7 @@ for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
 
 ### set_obj_groups(self):
 ```
-for subclass in [Obj, Package, Invisible, *get_subclasses(Package), *get_subclasses(Obj, get_supers=False)]:
+for subclass in [Obj, Package, Bin, *get_subclasses(Package), *get_subclasses(Obj, get_supers=False)]:
 ```
 * 스프라이트 불러오기가 필요한 클래스들을 모두 [] 안에 담아, 하나씩 꺼냄.
 

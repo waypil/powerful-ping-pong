@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.2.0 """
+""" Powerful Ping-Pong v1.3.0 """
 
 import sys
 
@@ -6,8 +6,26 @@ from package import *
 
 
 class Keyinput:
+    @staticmethod
+    def check_system_keys():
+        if 'esc' in Key.up:  # 게임 종료
+            if SYS.mode('GAME'):
+                SYS.hard_mode = False
+                SYS.mode_change('TITLE')
+            else:  # 'TITLE', 'END'
+                pg.quit(), sys.exit()
+
+        if 'enter' in Key.up:  # 전체화면/창모드 전환
+            if SYS.mode('TITLE', 'END') and Player.saves:
+                SYS.mode_change('GAME')  # ENTER 누르면 게임 시작
+
+        if 'F11' in Key.up:  # 전체화면/창모드 전환
+            Screen.update_resolution()
+
     @classmethod
     def update(cls):
+        cls.check_system_keys()
+
         Mouse.pos = pg.mouse.get_pos()  # 마우스 커서 좌표 할당
 
         cls.input_keep(pg.key.get_pressed())

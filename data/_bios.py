@@ -89,3 +89,7 @@ class Mouse:
 
 class Key:
     keep, down, up = [], [], []
+
+
+class Bin:
+    s, packs, fonts = pg.sprite.Group(), pg.sprite.Group(), []

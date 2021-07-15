@@ -104,11 +104,9 @@ def px_tl(*numbers):  # pixel to tile
         raise TypeError("*numbers type must be list/tuple/int/float.")
 
 
-def rc8(x, y):  # Relative Coordinates ±n/8
-    # result_x = x * SYS.rect.w / 16 + SYS.rect.w / 2
-    # result_y = y * SYS.rect.h / 16 + SYS.rect.h / 2
-    result_x = SYS.rect.w * (8 + x) / 16
-    result_y = SYS.rect.h * (8 + y) / 16
+def rc(x, y):  # Relative Coordinates ±n/16
+    result_x = SYS.rect.w * (16 + x) / 32
+    result_y = SYS.rect.h * (16 + y) / 32
     return result_x, result_y
 
 
@@ -260,48 +258,36 @@ def batch_bool(boolean: bool, logical_operator: str,
         return False not in comparison
 
 
-def append(_list: list, _item, tidy: bool = False):
+def append(_list: Union[list, pg.sprite.Group], _item, tidy: bool = False):
     """tidy=True: _item을 추가한 뒤, _list에 있는 모든 중복값들을 삭제.
     tidy=False: _list에 _item이 있으면 _item을 추가하지 않음. (기본값)
     """
-    if _item not in _list:
-        _list.append(_item)
-    if tidy:
-        list(set(_list))
+    if type(_list) is list:
+        if _item not in _list:
+            _list.append(_item)
+        if tidy:
+            list(set(_list))
+    else:  # pg.sprite.Group (여기서는 tidy를 적용하지 않음)
+        while _list.has(_item):
+            _list.remove(_item)
+        _list.add(_item)
     return _list
 
 
-def add(_dict: dict, *args):  # dict에 안전하게 새 key:[] 생성 및 item 추가
-    if len(args) >= 3:
-        key, args, value = args[0], args[1:-1], args[-1]
-        if key not in _dict:  # 덮어쓰기 버그 방지
-            _dict[key] = {}
-        _dict[key] = add(_dict[key], *args, value)
-        return _dict
-    else:
-        key, value = args
-        try:
-            if key not in _dict:
-                _dict[key] = value
-            elif type(_dict[key]) is not list:  # int.append(value) 버그 방지
-                _dict[key] = [_dict[key], value]
-            else:
-                _dict[key].append(value)
-            return _dict
-        except TypeError:
-            raise TypeError("_dict의 층 수와 args의 층 수가 일치하지 않습니다")
-
-
-def remove(_list: list, _item, tidy: bool = False):
+def remove(_list: Union[list, pg.sprite.Group], _item, tidy: bool = False):
     """tidy=True: _list 안에 있는 모든 _item들을 삭제.
     tidy=False: _list 맨 앞에 있는 하나의 item을 삭제.
                 _list.remove()와 동일하나, 찾는 item이 없어도 에러 발생 안 함.
     """
-    if tidy:
-        while _item in _list:
-            _list.remove(_item)
-    else:
-        if _item in _list:
+    if type(_list) is list:
+        if tidy:
+            while _item in _list:
+                _list.remove(_item)
+        else:
+            if _item in _list:
+                _list.remove(_item)
+    else:  # pg.sprite.Group (여기서는 tidy를 적용하지 않음)
+        while _list.has(_item):
             _list.remove(_item)
     return _list
 
@@ -427,6 +413,17 @@ def random_pick(*args: Union[list, tuple]):
 
 
 """ Exclusivetools: functions for other classes """
+
+
+def subgroups(obj_class, return_objs_list=True):  # Only use in main.py
+    result = pg.sprite.Group()
+    for subclass in get_subclasses(obj_class, get_supers=False):  # Obj
+        result = group(result, subclass.s)
+
+    if return_objs_list:
+        return result.sprites()
+    else:
+        return result
 
 
 def collision_check(objs: pg.sprite.Group):  # Only in main.py

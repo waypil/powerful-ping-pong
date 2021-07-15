@@ -1,9 +1,10 @@
-""" Powerful Ping-Pong v1.2.0 """
+""" Powerful Ping-Pong v1.3.0 """
 
 import pickle
 
 from data.clstools import *
 from data.framewatch import *
+from data.font import *
 
 
 class Obj(pg.sprite.Sprite):
@@ -25,6 +26,26 @@ class Obj(pg.sprite.Sprite):
                     return obj
         raise KeyError(f"{cls.__name__}의 '{name}' 객체가 존재하지 않습니다. "
                        f"len({cls.__name__}.s) : {len(objs)}")
+
+    @classmethod
+    def hide_all(cls, *exceptions):
+        cls.visible_all(False, *exceptions)
+
+    @classmethod
+    def appear_all(cls, *exceptions):
+        cls.visible_all(True, *exceptions)
+
+    @classmethod
+    def visible_all(cls, make_visible: bool, *exceptions):
+        for obj in subgroups(Obj) if make_visible else Obj.s:
+            if obj not in exceptions:
+                obj.visible(make_visible)
+
+    @classmethod
+    def available_all(cls, make_available: bool, *exceptions):
+        for obj in Bin.s if make_available else Obj.s:
+            if obj not in exceptions:
+                obj.available(make_available)
 
     def __init__(self, name, xy: tuple = (0, 0), point=TOPLEFT):
         super().__init__()
@@ -61,15 +82,20 @@ class Obj(pg.sprite.Sprite):
             loaded_imgkey = self.__class__.saves['imgkey']
             self.set_sprite(loaded_name, loaded_imgkey)
 
-    def hide(self, make_sprite_invisible: bool = True):
-        self.kill()
-        if make_sprite_invisible:
-            Invisible.s.add(self)
-        else:  # if make sprite visible
-            Obj.s.add(self), self.__class__.s.add(self)
+    def hide(self):
+        self.visible(False)
 
-    def hide_temp(self, make_sprite_invisible: bool = True):
-        Obj.s.remove(self) if make_sprite_invisible else Obj.s.add(self)
+    def appear(self):
+        self.visible(True)
+
+    def visible(self, make_visible: bool):
+        append(Obj.s, self) if make_visible else remove(Obj.s, self)
+
+    def available(self, make_available: bool):
+        if make_available and Bin.s.has(self):
+            remove(Bin.s, self), append(Obj.s, self)
+        elif not make_available and Obj.s.has(self):
+            remove(Obj.s, self), append(Bin.s, self)
 
     def clsname(self, compare_name='', get_super=False):  # class name
         if compare_name:
@@ -131,49 +157,6 @@ class Obj(pg.sprite.Sprite):
         self.dxd -= int(self.dxd)  # 소수 부분만 남김 (다음 dxd와 합산)
         self.dyd -= int(self.dyd)  # 소수 부분만 남김 (다음 dyd와 합산)
         self.dx, self.dy = 0, 0
-
-
-class Text(Obj):
-    def __init__(self, fontname, size, color, align=CENTER, bg=None):
-        super().__init__(None, point=align)
-        self.fontname = fontname
-        self.fontpath = f'resources/fonts/{fontname}.ttf'
-
-        self.default_size = self.size = size
-        self.default_color = self.color = color
-        self.default_bg = self.bg = bg  # BackGround
-
-        self.align = align  # Rect/Position/Location in _constants.py
-        self.xy = (0, 0)  # temp: must be changed
-        self.aa = True  # Anti-Aliasing
-
-    def __getitem__(self, argument):
-        if type(argument) is int:
-            self.size = argument
-        elif type(argument) is tuple:
-            if len(argument) == 2:  # (x, y)
-                self.xy = argument
-            elif len(argument) == 3:  # (r, g, b)
-                self.color = argument
-            else:
-                raise AssertionError
-        else:
-            raise AssertionError
-        return self
-
-    def __call__(self, sentence):  # write (draw)
-        font = pg.font.Font(self.fontpath, self.size)
-        self.image = font.render(f'{sentence}', self.aa, self.color, self.bg)
-        self.rect = set_rect(self.image, self.xy, point=self.align)
-
-        if Obj.s.has(self):  # hide 상태가 아닐 경우
-            Screen.on.blit(self.image, self.rect)
-
-        self.__reset_to_default()
-
-    def __reset_to_default(self):
-        self.size = self.default_size
-        self.color, self.bg = self.default_color, self.default_bg
 
 
 class Field(Obj):
@@ -381,41 +364,18 @@ class Button(Obj):
 
 
 class ButtonText(Button):
-    def __init__(self, sentence, xy: tuple, point):
-        super().__init__(None, xy, point)
-        self.xy = xy
-
-        self.font = None
-        self.size, self.color, self.align, self.bg = 0, WHITE, point, None
-        self.__apply_font()
-
-        self.sentence = sentence
+    def __init__(self, size: int, color: tuple, xy: tuple = (0, 0),
+                 align=CENTER, bg=None, is_visible=True, font=JP_RETRO,
+                 fix_text=''):
+        super().__init__(None, xy, align)
+        self.f = Text(size, color, xy, align, bg, is_visible, font, fix_text)
         self.is_pushed = False
 
     def update(self):
         if bool(self.rect.collidepoint(Mouse.pos)):
             if Mouse.event == CLICK_LEFT_DOWN:
                 self.is_pushed = False if self.is_pushed else True
-
-        self.font[self.xy](self.sentence)  # write (draw)
-        self.image, self.rect = self.font.image, self.font.rect
-
-    def font_reset(self, size='', color='', align='', bg=''):
-        if size:
-            self.size = size
-        if color:
-            self.color = color
-        if align:
-            self.align = align
-        if bg:
-            self.bg = bg
-
-        self.__apply_font()
-        self.image, self.rect = self.font.image, self.font.rect
-
-    def __apply_font(self):
-        self.font = Text('GenShinGothic-Monospace-Bold',
-                         self.size, self.color, self.align, self.bg)
+        self.image, self.rect = self.f.get_surface_and_rect()
 
 
 class ButtonSelectColor(Button):
@@ -429,6 +389,7 @@ class ButtonSelectLR(Button):
         super().__init__(name, xy, point)
         red_pos = matrix(xy, tl_px(0.5, -1))
         blue_pos = matrix(red_pos, tl_px(2, 0))
+
         self.red = ButtonSelectColor(['color', 'red_unpush'], red_pos, TOPLEFT)
         self.blue = ButtonSelectColor(['color', 'blue_unpush'],
                                       blue_pos, TOPLEFT)
@@ -437,7 +398,7 @@ class ButtonSelectLR(Button):
     def update(self):
         super().update()
         if self.sprite_is(PUSH):
-            self.red.hide(False), self.blue.hide(False)
+            self.red.appear(), self.blue.appear()
         else:  # self.sprite_is(UNPUSH)
             self.red.hide(), self.blue.hide()
 
@@ -612,36 +573,11 @@ class WarpPaddle(Skill):  # 공이 있는 높이로 Paddle 워프
 #             self.player.speed //= 2
 
 
-class Invisible(pg.sprite.Sprite):
-    """"""
-    @classmethod
-    def all(cls, hide=True, *exceptions):
-        for obj in cls.__subgroup():
-            if obj not in exceptions:
-                obj.hide_temp(hide)
-
-    @staticmethod
-    def __subgroup(return_objs_list=True):
-        result = pg.sprite.Group()
-        for subclass in get_subclasses(Obj, get_supers=False):
-            result = group(result, subclass.s)
-
-        if return_objs_list:
-            return result.sprites()
-        else:
-            return result
-
-
 class Score:
     font = None
     win = None
     win_score = 5
     best_time = {EASY: 0, HARD: 0}
-
-    @classmethod
-    def draw(cls):
-        cls.font[rc8(-3.5, -7.2)](cls.s[LEFT])
-        cls.font[rc8(3.5, -7.2)](cls.s[RIGHT])
 
     @classmethod
     def plus(cls, obj_name, score=1):
@@ -679,10 +615,8 @@ class Score:
 
     @classmethod
     def reset(cls, reset_score=True, reset_win=True):
-        cls.font = Text('GenShinGothic-Monospace-Bold', 52, WHITE)
-
         if reset_score:
-            cls.s = {LEFT: 0, RIGHT: 0}
+            cls.s = {LEFT: 0, RIGHT: 0}  # pg.sprite.Group -> dict
         if reset_win:
             cls.win = False
 
@@ -704,12 +638,10 @@ class Score:
             with open('data.pickle', 'wb') as savefile:  # 파일로 저장
                 pickle.dump(cls.best_time, savefile)
 
-            SYS.playtime = None
-
     @classmethod
     def load(cls):
         try:
             with open("data.pickle", "rb") as savefile:  # 세이브 파일 불러오기
                 cls.best_time = pickle.load(savefile)
-        except Exception:   # 세이브 파일이 없을 경우
+        except Exception:  # 세이브 파일이 없을 경우
             cls.best_time = {EASY: 0, HARD: 0}

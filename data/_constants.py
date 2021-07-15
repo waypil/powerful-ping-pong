@@ -55,6 +55,16 @@ WHEEL_UP, WHEEL_DOWN, NOTHING = 'wheel_up', 'wheel_down', 'nothing'  # +None
 #
 
 
+""" FONTS """
+
+JP_RETRO = 'GenShinGothic-Monospace-Bold'  # default
+KR_RETRO = 'DungGeunMo'
+EN_RETRO = 'Fixedsys500c'
+
+
+#
+
+
 """ COLORS """
 
 WHITE = (255, 255, 255)

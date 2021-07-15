@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.2.0 """
+""" Powerful Ping-Pong v1.3.0 """
 
 from object import *
 
@@ -7,24 +7,61 @@ class Package(pg.sprite.Sprite):
     """모든 패키지의 틀.
     superclass, subclass 모두 cls.s = pg.sprite.Group() 존재
     """
+    # @classmethod
+    # def hide_all(cls, *exceptions):
+    #     cls.visible_all(False, *exceptions)
+    #
+    # @classmethod
+    # def appear_all(cls, *exceptions):
+    #     cls.visible_all(True, *exceptions)
+    #
+    # @classmethod
+    # def visible_all(cls, make_visible: bool, *exceptions):
+    #     for obj in subgroups(Package) if make_visible else Package.s:
+    #         if obj not in exceptions:
+    #             obj.visible(make_visible)
+    #
+    # @classmethod
+    # def available_all(cls, make_available: bool, *exceptions):
+    #     for obj in Bin.packs if make_available else Package.s:
+    #         if obj not in exceptions:
+    #             obj.available(make_available)
+
     def __init__(self, name):
         super().__init__()
         Package.s.add(self), self.__class__.s.add(self)
         self.name = name
 
+    # def hide(self):
+    #     self.visible(False)
+    #
+    # def appear(self):
+    #     self.visible(True)
+    #
+    # def visible(self, make_visible: bool):
+    #     append(Package.s, self) if make_visible else remove(Package.s, self)
+    #
+    # def available(self, make_available: bool):
+    #     if make_available and Bin.packs.has(self):
+    #         remove(Bin.packs, self), append(Package.s, self)
+    #     elif not make_available and Package.s.has(self):
+    #         remove(Package.s, self), append(Bin.packs, self)
+
 
 class PackSelectPlayer(Package):
-    def __init__(self, name, xy: tuple, point):
-        super().__init__(name)
+    def __init__(self, xy: tuple, point):
+        super().__init__(None)
         field_xy = xy
-        btns_xy = matrix(field_xy, tl_px(1, -2))
-        pdl_lxy = matrix(field_xy, tl_px(1, 3))
-        pdl_rxy = matrix(pdl_lxy, tl_px(10, 0))
+        btns_xy = matrix(field_xy, tl_px(+1, -2))
+        pdl_lxy = matrix(field_xy, tl_px(+1, +3))
+        pdl_rxy = matrix(pdl_lxy, tl_px(+10, 0))
 
         self.field = Decoration('sample_field', field_xy, point)
-        self.button = PackButtonSelectLR(LEFT, btns_xy, TOPLEFT)
+        self.button = PackButtonSelectLR(btns_xy, TOPLEFT)
         self.paddle_l = PaddleSample(['gray', 'left'], pdl_lxy, TOPLEFT)
         self.paddle_r = PaddleSample(['gray', 'right'], pdl_rxy, TOPRIGHT)
+
+        self.f = Text(36, WHITE)
 
         self.state = None  # None, LEFT, RIGHT
 
@@ -37,41 +74,52 @@ class PackSelectPlayer(Package):
         elif self.state == RIGHT:
             Rival.saves, Player.saves = self.button.get()
 
+        if Player.saves:
+            self.f[[-4, -4.5]]("SELECT YOUR COLOR.  →")
+            self.f[[-7, -1]]("PRESS ENTER TO START GAME.")
+            if self.state == LEFT:
+                self.f[[5, 3]]("↓ Player")
+            else:
+                self.f[[11, 3]]("Player ↓")
+        else:
+            self.f[[-5, -2]]("SELECT YOUR POSITION.  →")
+
 
 class PackButtonSelectLR(Package):
-    def __init__(self, name, xy: tuple, point):
-        super().__init__(name)
+    def __init__(self, xy: tuple, point):
+        super().__init__(None)
         l_xy = xy
-        r_xy = matrix(l_xy, tl_px(6, 0))
-        self.l = ButtonSelectLR(LEFT, l_xy, point)
-        self.r = ButtonSelectLR(RIGHT, r_xy, point)
+        r_xy = matrix(l_xy, tl_px(+6, 0))
+
+        self.l_ = ButtonSelectLR(LEFT, l_xy, point)
+        self.r_ = ButtonSelectLR(RIGHT, r_xy, point)
 
         self.__state = None  # None, LEFT, RIGHT
 
     def check(self):
-        if self.l.sprite_is(PUSH) and self.r.sprite_is(PUSH):
+        if self.l_.sprite_is(PUSH) and self.r_.sprite_is(PUSH):
             self._unpush(self.__state)  # switching L/R
 
-        if self.l.sprite_is(PUSH) and self.__state in [None, RIGHT]:
+        if self.l_.sprite_is(PUSH) and self.__state in [None, RIGHT]:
             self._unpush(RIGHT)
-        elif self.r.sprite_is(PUSH) and self.__state in [None, LEFT]:
+        elif self.r_.sprite_is(PUSH) and self.__state in [None, LEFT]:
             self._unpush(LEFT)
 
         return self.__state
-
+    
     def _unpush(self, direction):
         if direction == LEFT:
-            self.l.set_sprite(UNPUSH)
+            self.l_.set_sprite(UNPUSH)
             self.__state = RIGHT
         elif direction == RIGHT:
-            self.r.set_sprite(UNPUSH)
+            self.r_.set_sprite(UNPUSH)
             self.__state = LEFT
         else:  # if direction is None:
             raise AssertionError
 
     def get(self, direction=ALL):
-        _left = {'name': self.l.name, 'imgkey': self.l.imgkey}
-        _right = {'name': self.r.name, 'imgkey': self.r.imgkey}
+        _left = {'name': self.l_.name, 'imgkey': self.l_.imgkey}
+        _right = {'name': self.r_.name, 'imgkey': self.r_.imgkey}
         
         if direction == ALL:
             return _left, _right
@@ -87,19 +135,53 @@ class PackCredits(Package):
     def __init__(self, name, xy: tuple, point):
         super().__init__(name)
         self.default_sentence = name
-
-        self.button = ButtonText(name, xy, point)
-        self.button.font_reset(36, BLACK, bg=WHITE)
-
+        self.button = ButtonText(40, BLACK, xy, point, WHITE, fix_text=name)
         self.popup = Decoration('credits', SYS.rect.center, CENTER)
 
     def update(self):
         super().update()
         if self.button.is_pushed:
             Audio.exchange(BGM['title'], BGM['credits'])
-            Invisible.all(True, self.button), self.popup.hide(False)
-            self.button.sentence = "  CLOSE  "
+            Obj.available_all(False, self.button), Text.available_all(False)
+            self.popup.appear()
+            self.button.f.default_text = "  CLOSE  "
         else:
             Audio.exchange(BGM['credits'], BGM['title'])
-            Invisible.all(False, self.button), self.popup.hide()
-            self.button.sentence = self.default_sentence
+            Obj.available_all(True, self.button), Text.available_all(True)
+            self.popup.hide()
+            self.button.f.default_text = self.default_sentence
+
+
+class PackLeaderboard(Package):
+    def __init__(self, xy: tuple, point):
+        super().__init__(None)
+        signboard_xy = xy  # rc(-7, 5)
+        easy_xy = matrix(signboard_xy, tl_px(0, +1.5))
+        hard_xy = matrix(signboard_xy, tl_px(0, +2.5))
+
+        self.signboard_f = Text(40, WHITE, signboard_xy, point,
+                                fix_text="[BEST TIME]")
+        self.easy_f = Text(40, WHITE, easy_xy, point)
+        self.hard_f = Text(40, WHITE, hard_xy, point)
+
+    def update(self):
+        super().update()
+
+        self.signboard_f()
+
+        if Score.best_time[EASY] == 0:
+            self.easy_f[GRAY](f"EASY: ---.--")
+        else:
+            self.easy_f(self.__get_best_time(EASY))
+
+        if Score.best_time[HARD] == 0:
+            self.hard_f[GRAY](f"HARD: ---.--")
+        else:
+            self.hard_f(self.__get_best_time(HARD))
+            
+    @staticmethod
+    def __get_best_time(stage):  # EASY / HARD
+        best_time = '{:.2f}'.format(Score.best_time[stage]).rjust(6, ' ')
+        return f"{stage.upper()}: {best_time}"
+        
+

@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.2.0 """
+""" Powerful Ping-Pong v1.3.0 """
 
 from keyinput import *
 
@@ -35,35 +35,17 @@ class Game:
         init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
                     게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
         """
-        for subclass in [Obj, Package, Invisible, *get_subclasses(Package),
+        for subclass in [Obj, Package, Bin, *get_subclasses(Package),
                          *get_subclasses(Obj, get_supers=False)]:
             attr_name = f'{subclass.__name__.lower()}s'  # 'Obj' → 'objs'
             if init:  # Game.objs = pg.sprite.Group()
                 setattr(self, attr_name, pg.sprite.Group())
             subclass.s = getattr(self, attr_name)  # Game.objs → Obj.s
 
-    @staticmethod
-    def apply_system_keys():
-        if 'esc' in Key.up:  # 게임 종료
-            if SYS.mode('GAME'):
-                SYS.hard_mode = False
-                SYS.mode_change('TITLE')
-            else:  # 'TITLE', 'END'
-                pg.quit(), sys.exit()
-
-        if 'enter' in Key.up:  # 전체화면/창모드 전환
-            if SYS.mode('TITLE', 'END') and Player.saves:
-                SYS.mode_change('GAME')  # ENTER 누르면 게임 시작
-
-        if 'F11' in Key.up:  # 전체화면/창모드 전환
-            Screen.update_resolution()
-
     def __init__(self, name):
         self.name = name
         self.clock = Stopwatch()
-
-        self.font = None
-        self.font_clock = None
+        self.clock_f = None
 
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
@@ -73,9 +55,7 @@ class Game:
     def create(self):
         """객체(클래스 인스턴스)를 만드는 전용 공간. init() 안에 배치.
         """
-        self.font = Text('GenShinGothic-Monospace-Bold', 40, WHITE, CENTER,
-                         BLACK)
-        self.font_clock = Text('GenShinGothic-Monospace-Bold', 36, GREEN)
+        self.clock_f = Text(36, GREEN, rc(0, 14.5))
 
     def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
@@ -85,20 +65,18 @@ class Game:
     def draw(self):
         """update 결과에 따라, 배경/스프라이트를 화면에 표시.
         """
-        Screen.on.fill(BLACK), self.objs.draw(Screen.on)
+        Screen.on.fill(BLACK), self.objs.draw(Screen.on), Text.draw_all()
 
     def time(self):
         Framewatch.tick_all()  # 프레임 시간 +0.01초
-
-        if self.clock() != 0:
-            self.font_clock[rc8(0, 7.2)](self.clock.get(1))
+        self.clock_f(self.clock(1) if self.clock() != 0 else '')
 
     def run(self):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
         """
         self.init()
         while SYS.mode(self.name):
-            Game.apply_system_keys(), self.loop(), fps.tick(FPS)
+            self.loop(), fps.tick(FPS)
         self.off()
 
     def loop(self):
@@ -106,7 +84,6 @@ class Game:
         """
         self.update(), self.draw(), self.time()
         pg.display.update()  # 모든 draw 명령을 화면에 반영
-
         SYS.mode_update()
 
     def off(self):
@@ -118,63 +95,55 @@ class Game:
 class Title(Game):
     def __init__(self, name):
         super().__init__(name)
-        self.select_player = None
-        self.credits = None
+        self.title_f = None
+        # ↓ Packages ↓
+        self.select_player, self.credits, self.leaderboard = None, None, None
 
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
-        super().init(), self.clock.off(), Game.assign_saves_in_subclass()
-
-        Audio.stop_all()
-        Audio.play(BGM['title'])
+        super().init()
+        SYS.playtime = None
+        self.clock.off(), Game.assign_saves_in_subclass()
+        Audio.stop_all(), Audio.play(BGM['title'])
+        # ↓ Fonts ↓
+        self.title_f.appear(), self.credits.button.f.appear()
+        self.leaderboard.signboard_f.appear()
 
     def create(self):
         super().create()
-
-        self.select_player = \
-            PackSelectPlayer('select_player', tl_px(18, 9), TOPLEFT)
-
-        self.credits = PackCredits(' CREDITS ', rc8(-8, 8), BOTTOMLEFT)
+        self.title_f = Text(120, CYAN, rc(0, -11), bg=BLACK,
+                            fix_text=GAME_TITLE_NAME)
+        # ↓ Packages ↓
+        self.select_player = PackSelectPlayer(tl_px(18, 9), TOPLEFT)
+        self.credits = PackCredits(' CREDITS ', rc(-16, 16), BOTTOMLEFT)
+        self.leaderboard = PackLeaderboard(rc(-7, 5), CENTER)
 
     def draw(self):
         super().draw()
-        self.font[120][CYAN][rc8(0, -5.5)](GAME_TITLE_NAME)
-
-        self.font[50][rc8(-3.5, 2.5)]("[BEST TIME]")
-
-        if Score.best_time[EASY] == 0:
-            self.font[rc8(-3.5, 4)][GRAY](f"EASY: ---.--")
-        else:
-            p = f"EASY: {'{:.2f}'.format(Score.best_time[EASY]).rjust(6, ' ')}"
-            self.font[rc8(-3.5, 4)](p)
-
-        if Score.best_time[HARD] == 0:
-            self.font[rc8(-3.5, 5)][GRAY](f"HARD: ---.--")
-        else:
-            p = f"HARD: {'{:.2f}'.format(Score.best_time[HARD]).rjust(6, ' ')}"
-            self.font[rc8(-3.5, 5)](p)
-
-        if Player.saves:
-            self.font[rc8(-2, -2.2)]("SELECT YOUR COLOR.  →")
-            self.font[rc8(-3.5, -0.5)]("PRESS ENTER TO START GAME.")
-            if self.select_player.state == LEFT:
-                self.font[rc8(2.5, 1.5)]("↓ Player")
-            else:
-                self.font[rc8(5.5, 1.5)]("Player ↓")
-        else:
-            self.font[rc8(-2.5, -1)]("SELECT YOUR POSITION.  →")
+        self.title_f()
 
     def off(self):
         super().off()
         Audio.stop_all()
-
+        # ↓ Fonts ↓
+        self.title_f.hide(), self.credits.button.f.hide()
+        self.leaderboard.signboard_f.hide()
+        
 
 class Stage(Game):
+    def __init__(self, name):
+        super().__init__(name)
+        self.left_score_f, self.right_score_f = None, None
+        # ↓ Packages ↓
+        self.select_player, self.credits, self.leaderboard = None, None, None
+
     def create(self):
         super().create()
-        Field('black')
-        Ball('ball', SYS.rect.center, CENTER, 1)
+        self.left_score_f = Text(50, WHITE, rc(-7, -14.5))
+        self.right_score_f = Text(50, WHITE, rc(7, -14.5))
+
+        Field('black'), Ball('ball', SYS.rect.center, CENTER, 1)
         Player(), Rival()
 
     def init(self):
@@ -190,45 +159,59 @@ class Stage(Game):
         if Score.win and SYS.playtime is None:
             SYS.playtime = self.clock(2)
 
-    def draw(self):
-        super().draw(), Score.draw()
+        self.left_score_f(Score.s[LEFT]), self.right_score_f(Score.s[RIGHT])
 
     def off(self):
         super().off(), self.clock.pause(), Score.save()
 
 
 class End(Game):
+    def __init__(self, name):
+        super().__init__(name)
+        self.left_score_f, self.right_score_f = None, None
+        self.left_f, self.right_f, self.notice_f = None, None, None
+
     def create(self):
         super().create()
+        self.left_score_f = Text(50, WHITE, rc(-7, -14.5))
+        self.right_score_f = Text(50, WHITE, rc(7, -14.5))
+        self.left_f = Text(120, CYAN, rc(-7, -7))
+        self.right_f = Text(120, CYAN, rc(7, -7))
+        self.notice_f = Text(40, WHITE, rc(0, 8))
         Field('black')
 
     def init(self):
         super().init(), Score.reset(False, False)
 
     def draw(self):
-        super().draw(), Score.draw()
+        super().draw()
+        self.clock_f(SYS.playtime)
+        self.left_score_f(Score.s[LEFT]), self.right_score_f(Score.s[RIGHT])
 
         if LEFT in Score.win:
-            self.font[120][CYAN][rc8(-3.5, -3.5)]("WIN")
-            self.font[120][CYAN][rc8(3.5, -3.5)]("LOSE")
+            self.left_f("WIN"), self.right_f("LOSE")
         elif RIGHT in Score.win:
-            self.font[120][CYAN][rc8(-3.5, -3.5)]("LOSE")
-            self.font[120][CYAN][rc8(3.5, -3.5)]("WIN")
+            self.left_f("LOSE"), self.right_f("WIN")
 
         if 'Player' in Score.win:
-            self.font[rc8(0, 4)]("PRESS ENTER TO CHALLENGE THE HARD MODE.")
+            self.notice_f("PRESS ENTER TO CHALLENGE THE HARD MODE.")
             SYS.hard_mode = True
         elif 'Rival' in Score.win:
-            self.font[rc8(0, 4)]("PRESS ENTER TO TRY AGAIN.")
+            self.notice_f("PRESS ENTER TO TRY AGAIN.")
             SYS.hard_mode = False
+
+    def off(self):
+        super().off()
+        SYS.playtime = None
 
 
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
+
     Game.assign_image_in_subclass(), Game.assign_copied_in_subclass()
     BGM.init(), Sound.init()
 
-    Score.load()
+    Score.load()  # 세이브 파일 불러오기
 
     title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
 

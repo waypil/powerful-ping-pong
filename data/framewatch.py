@@ -3,7 +3,7 @@
 from data.tools import *
 
 
-class Framewatch:
+class Framewatch:  # 상속 외 다른 용도로 사용하지 않음
     """Default is 100 fps.
     """
     s = []
@@ -41,7 +41,7 @@ class Framewatch:
         if self.running or force:
             self.now += self._elapse()
 
-    def get(self, ndigits):  # frame을 초 단위로 변환, 소수점 지정
+    def _get(self, ndigits):  # frame을 초 단위로 변환, 소수점 지정
         if ndigits == 0:
             return self.now // 100  # 0초
         elif ndigits == 1:
@@ -57,7 +57,7 @@ class Framewatch:
         if ndigits is None:
             return item
         else:
-            return item, self.get(ndigits)
+            return item, self._get(ndigits)
 
     def speed(self, times):
         self._elapse.speed *= times
@@ -103,7 +103,7 @@ class Stopwatch(Framewatch):
         self.checkpoints = []
 
     def __call__(self, ndigits=None):
-        return self.get(ndigits)
+        return self._get(ndigits)
 
     def check(self):
         self.checkpoints.append(self.now)
@@ -171,7 +171,7 @@ class CycleClock(RotationClock):
             return self.call(self.item, ndigits)
 
 
-class __CumulativeClock(RotationClock):  # 상속 외 다른 용도로 사용하지 않음
+class CumulativeClock(RotationClock):  # 상속 외 다른 용도로 사용하지 않음
     def reset(self, start_frame=None, immediate_start=False):
         super().reset(start_frame, immediate_start)
         self.checkpoint = 0
@@ -181,7 +181,7 @@ class __CumulativeClock(RotationClock):  # 상속 외 다른 용도로 사용하
         self.checkpoint = 0
 
 
-class RotationClockCumulative(__CumulativeClock):
+class RotationClockCumulative(CumulativeClock):
     def __call__(self, ndigits=None):
         if self.now >= self.limit:  # 교대 타임 도달 시
             self.checkpoint = self.now  # 차이점
@@ -189,7 +189,7 @@ class RotationClockCumulative(__CumulativeClock):
         return self.call(self.item, ndigits)
 
 
-class CycleClockCumulative(__CumulativeClock):
+class CycleClockCumulative(CumulativeClock):
     """fps.tick()이 이 클래스보다 앞에 올 경우,
     두 번째 인자부터 시작해버리는 버그가 발생하므로 주의!!!
     """
