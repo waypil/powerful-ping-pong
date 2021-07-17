@@ -188,7 +188,14 @@ class Ball(Obj):
                 Score.plus(RIGHT)
             else:
                 Score.plus(LEFT)
+            self.cancel_paddle_skills()
             self.reset()  # 초기 위치로 재배치
+
+    def cancel_paddle_skills(self):
+        player = Player.get()
+        for i in player.skill:
+            if len(self.__class__.s) <= 1 and player.skill[i].state == RUNNING:
+                player.skill[i].button(OFF)
 
     def avoid_verticality(self):  # 각도가 너무 수직일 경우, 살짝 기울임
         north, south = math.pi * 1 / 2, math.pi * 3 / 2

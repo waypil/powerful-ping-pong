@@ -17,7 +17,7 @@ class Game:
 
         init=True: cls명에 따른 인스턴스 변수 양산, 그곳에 빈 Group() 할당.
                    첫 실행, 혹은 SYS.mode가 변경될 때(예: stage가 바뀔 때) 사용
-        init=False: Group()가 담긴 기존 inst 변수를 object.py의 cls에 각각 전송
+        init=False: 기존 Group() 변수를 object.py의 cls에 각각 전송
                     게임 이어하기, 저장 후 로드, 대전 이력 확인 등에 사용 예정
         """
         for subclass in [Obj, Package, Bin, *get_subclasses(Package),

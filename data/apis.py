@@ -130,14 +130,6 @@ class Score:
             Sound['score_down'].play()
 
         cls.win = ROM().win_check()
-        # cls.cancel_paddle_skills()
 
         if cls.win:
             SYS.mode_change(RESULT)
-
-    # @classmethod
-    # def cancel_paddle_skills(cls):
-    #     player = Player.get()
-    #     for i in player.skill:
-    #         if len(Ball.s) <= 1 and player.skill[i].state == RUNNING:
-    #             player.skill[i].button(OFF)
