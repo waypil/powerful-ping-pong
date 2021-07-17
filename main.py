@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.2 """
+""" Powerful Ping-Pong v1.4.3 """
 
 from keyinput import *
 
@@ -29,7 +29,6 @@ class Game:
 
     def __init__(self, name):
         self.name = name
-        self.clock_f = None
 
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
@@ -72,12 +71,6 @@ class Game:
 
 
 class Title(Game):
-    def __init__(self, name):
-        super().__init__(name)
-        self.title_f = None
-        # ↓ Packages ↓
-        self.select_player, self.credits, self.leaderboard = None, None, None
-
     def init(self):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
@@ -104,12 +97,6 @@ class Title(Game):
         
 
 class Stage(Game):
-    def __init__(self, name):
-        super().__init__(name)
-        self.score_l_f, self.score_r_f = None, None
-        # ↓ Packages ↓
-        self.select_player, self.credits, self.leaderboard = None, None, None
-
     def create(self):
         super().create()
         self.score_l_f = Text(50, WHITE, rc(-7, -14.5))
@@ -146,11 +133,6 @@ class Stage(Game):
 
 
 class Result(Game):
-    def __init__(self, name):
-        super().__init__(name)
-        self.score_l_f, self.score_r_f = None, None
-        self.left_f, self.right_f, self.notice_f = None, None, None
-
     def create(self):
         super().create()
         self.score_l_f = Text(50, WHITE, rc(-7, -14.5))
@@ -177,23 +159,37 @@ class Result(Game):
             self.notice_f("PRESS ENTER TO TRY AGAIN.")
 
 
-if __name__ == '__main__':
-    Screen.update_resolution()  # 화면 초기 설정
-    
-    ROM.init(True), RAM.init(Obj), Image.init(Obj), BGM.init(), Sound.init()
+class Main:
+    s = {}
 
-    title, result = Title(TITLE), Result(RESULT)
-    stage_1, stage_2 = Stage(STAGE_1), Stage(STAGE_2),
+    @classmethod
+    def run(cls, *args):
+        if __name__ == '__main__':
+            cls.init(), cls.create(*args), cls.loop()
 
-    while True:
-        if SYS.mode(TITLE):
-            title.run()
+    @classmethod
+    def init(cls):
+        Screen.update_resolution()  # 화면 초기 설정
+        ROM.init(True), RAM.init(Obj)
+        Image.init(Obj), BGM.init(), Sound.init()
 
-        elif SYS.mode(STAGE_1):
-            stage_1.run()
+    @classmethod
+    def create(cls, *args):
+        for arg_list in args:
+            game_cls, modes = arg_list[0], arg_list[1:]
+            for mode in modes:
+                cls.s[mode] = game_cls(mode)
 
-        elif SYS.mode(STAGE_2):
-            stage_2.run()
+    @classmethod
+    def loop(cls):
+        while True:
+            for mode, game in cls.s.items():
+                if SYS.mode(mode):
+                    game.run()
 
-        elif SYS.mode(RESULT):
-            result.run()
+
+Main.run(
+    [Title, TITLE],
+    [Result, RESULT],
+    [Stage, STAGE_1, STAGE_2]
+)
