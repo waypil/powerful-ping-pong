@@ -1,11 +1,11 @@
-""" Powerful Ping-Pong v1.4.1 """
+""" Powerful Ping-Pong v1.4.2 """
 
 from keyinput import *
 
 
 """ [Import Order]
 * main > keyinput > package > object > /data/
-* /data/: apis > clstools/framewatch/font > tools > _bios > _constants
+* /data/: apis > framewatch/font > clstools > tools > _bios > _constants
 """
 
 
@@ -62,9 +62,7 @@ class Game:
     def loop(self):
         """processing_time_gauge 데코레이션 사용을 대비해 따로 분리
         """
-        self.update()
-        Framewatch.tick_all()  # 프레임 시간 +0.01초
-        self.draw()
+        self.update(), Framewatch.tick_all(), self.draw()
         pg.display.update()  # 모든 draw 명령을 화면에 반영
 
     def off(self):  # 반드시 하위 클래스 off()의 제일 아래에 배치할 것!
@@ -87,10 +85,6 @@ class Title(Game):
         RAM.player, RAM.rival = {}, {}
         Audio.stop_all(), Audio.play(BGM['title'])
 
-        # ↓ Fonts ↓
-        self.title_f.appear(), self.credits.button.f.appear()
-        self.leaderboard.signboard_f.appear()
-
     def create(self):
         super().create()
         self.title_f = Text(120, CYAN, rc(0, -11), bg=BLACK,
@@ -106,9 +100,6 @@ class Title(Game):
 
     def off(self):
         Audio.stop_all()
-        # ↓ Fonts ↓
-        self.title_f.hide(), self.credits.button.f.hide()
-        self.leaderboard.signboard_f.hide()
         super().off()
         
 

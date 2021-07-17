@@ -1,6 +1,6 @@
 """ Tools consist of methods of class """
 
-from data.tools import *
+from data.clstools import *
 
 
 class Framewatch:  # 상속 외 다른 용도로 사용하지 않음
@@ -22,7 +22,7 @@ class Framewatch:  # 상속 외 다른 용도로 사용하지 않음
                 return 0
 
     @classmethod
-    def tick_all(cls, force=False):
+    def tick_all(cls, force=False):  # 모든 Framewatch 객체의 시간 +0.01초
         for watch in cls.s:
             watch.tick(force)
 

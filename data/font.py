@@ -1,41 +1,12 @@
 """ Tools consist of methods of class """
 
-from data.tools import *
+from data.clstools import *
 
 
-class Text:
-    s = []
-    hiddens = []
-
-    @classmethod
-    def draw_all(cls):
-        for text in cls.s:
-            text.draw()
-
-    @classmethod
-    def hide_all(cls):
-        cls.visible_all(False)
-
-    @classmethod
-    def appear_all(cls):
-        cls.visible_all(True)
-
-    @classmethod
-    def visible_all(cls, make_visible: bool):
-        for text in cls.hiddens if make_visible else cls.s:
-            text.visible(make_visible)
-
-    @classmethod
-    def available_all(cls, make_available: bool):
-        for text in Bin.fonts if make_available else cls.s:
-            text.available(make_available)
-
+class Font:
     def __init__(self, size: int, color: tuple, xy: tuple = (0, 0),
                  align=CENTER, bg=None, is_visible=True, font=JP_RETRO,
                  fix_text=''):
-        if self not in self.__class__.s:  # 중복 담기 방지
-            self.__class__.s.append(self)
-
         self.drafts = []
 
         self.path, self.font = f"resources/fonts/", font
@@ -102,26 +73,11 @@ class Text:
                 Screen.on.blit(*self.get_surface_and_rect())  # 화면에 출력
         self.reset_to_default()
 
-    def hide(self):
-        self.visible(False)
-
-    def appear(self):
-        self.visible(True)
-
-    def visible(self, make_visible: bool):
-        append(Text.s, self) if make_visible else remove(Text.s, self)
-
-    def available(self, make_available: bool):
-        if make_available and self in Bin.fonts:
-            remove(Bin.fonts, self), append(Text.s, self)
-        elif not make_available and self in Text.s:
-            remove(Text.s, self), append(Bin.fonts, self)
-
     def get_surface_and_rect(self):
         font = pg.font.Font(f"{self.path}{self.font}.ttf", self.size)
         self.image = font.render(f'{self.text}', True, self.color, self.bg)
         self.rect = set_rect(self.image, self.xy, point=self.align)
-        return self.image, self.rect
+        return self.image.copy(), self.rect.copy()
 
     def reset_to_default(self):
         self.size = self.default_size

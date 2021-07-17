@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.1 """
+""" Powerful Ping-Pong v1.4.2 """
 
 import sys
 

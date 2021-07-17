@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.1 """
+""" Powerful Ping-Pong v1.4.2 """
 
 from data.apis import *
 
@@ -146,6 +146,36 @@ class Obj(pg.sprite.Sprite):
         self.dxd -= int(self.dxd)  # 소수 부분만 남김 (다음 dxd와 합산)
         self.dyd -= int(self.dyd)  # 소수 부분만 남김 (다음 dyd와 합산)
         self.dx, self.dy = 0, 0
+
+
+class Text(Obj):  # Font를 Obj처럼 사용하게 하는 클래스.
+    @classmethod
+    def draw_all(cls):
+        for obj in Obj.s:
+            if obj.clsname('Text'):
+                obj.draw()
+
+    def __init__(self, size: int, color: tuple, xy: tuple = (0, 0),
+                 align=CENTER, bg=None, is_visible=True, font=JP_RETRO,
+                 fix_text=''):
+        super().__init__(None, point=align)
+        self.__f = Font(size, color, xy, align, bg, is_visible, font, fix_text)
+
+    def update(self):
+        super().update()
+        self.image, self.rect = self.get_surface_and_rect()
+
+    def __getitem__(self, arg):
+        return self.__f[arg]
+
+    def __call__(self, sentence=None):
+        return self.__f(sentence)
+
+    def draw(self):
+        self.__f.draw()
+
+    def get_surface_and_rect(self):
+        return self.__f.get_surface_and_rect()
 
 
 class Field(Obj):

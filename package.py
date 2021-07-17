@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.1 """
+""" Powerful Ping-Pong v1.4.2 """
 
 from object import *
 
@@ -7,45 +7,10 @@ class Package(pg.sprite.Sprite):
     """모든 패키지의 틀.
     superclass, subclass 모두 cls.s = pg.sprite.Group() 존재
     """
-    # @classmethod
-    # def hide_all(cls, *exceptions):
-    #     cls.visible_all(False, *exceptions)
-    #
-    # @classmethod
-    # def appear_all(cls, *exceptions):
-    #     cls.visible_all(True, *exceptions)
-    #
-    # @classmethod
-    # def visible_all(cls, make_visible: bool, *exceptions):
-    #     for obj in subgroups(Package) if make_visible else Package.s:
-    #         if obj not in exceptions:
-    #             obj.visible(make_visible)
-    #
-    # @classmethod
-    # def available_all(cls, make_available: bool, *exceptions):
-    #     for obj in Bin.packs if make_available else Package.s:
-    #         if obj not in exceptions:
-    #             obj.available(make_available)
-
     def __init__(self, name):
         super().__init__()
         Package.s.add(self), self.__class__.s.add(self)
         self.name = name
-
-    # def hide(self):
-    #     self.visible(False)
-    #
-    # def appear(self):
-    #     self.visible(True)
-    #
-    # def visible(self, make_visible: bool):
-    #     append(Package.s, self) if make_visible else remove(Package.s, self)
-    #
-    # def available(self, make_available: bool):
-    #     if make_available and Bin.packs.has(self):
-    #         remove(Bin.packs, self), append(Package.s, self)
-    #     elif not make_available and Package.s.has(self):
-    #         remove(Package.s, self), append(Bin.packs, self)
 
 
 class PackSelectPlayer(Package):
@@ -142,13 +107,11 @@ class PackCredits(Package):
         super().update()
         if self.button.is_pushed:
             Audio.exchange(BGM['title'], BGM['credits'])
-            Obj.available_all(False, self.button), Text.available_all(False)
-            self.popup.appear()
-            self.button.f.default_text = "  CLOSE  "
+            Obj.available_all(False, self.button), self.popup.appear()
+            self.button.f("  CLOSE  ")
         else:
             Audio.exchange(BGM['credits'], BGM['title'])
-            Obj.available_all(True, self.button), Text.available_all(True)
-            self.popup.hide()
+            Obj.available_all(True, self.button), self.popup.hide()
             self.button.f.default_text = self.default_sentence
 
 
