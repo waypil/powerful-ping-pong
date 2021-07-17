@@ -8,7 +8,7 @@ class Obj(pg.sprite.Sprite):
 
     [클래스 변수]
     * subclass들 중 상위 class: cls.sprite = Image()
-    * subclass들 중 하위 class: cls.s = Group(), cls.copied = 0
+    * subclass들 중 하위 class: cls.s = Group()
     """
 
     @classmethod
@@ -46,7 +46,6 @@ class Obj(pg.sprite.Sprite):
     def __init__(self, name, xy: tuple = (0, 0), point=TOPLEFT):
         super().__init__()
         Obj.s.add(self), self.__class__.s.add(self)
-        self.__class__.copied += 1
 
         self.name, self.imgkey, subkeys = naming(self.__class__, name)
 

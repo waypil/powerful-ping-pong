@@ -10,16 +10,6 @@ from keyinput import *
 
 
 class Game:
-    @staticmethod
-    def assign_image_in_subclass():  # 모든 이미지 로드하기
-        for subclass in get_subclasses(Obj, get_subs=False):
-            setattr(subclass, 'sprite', Image(subclass.__name__))
-
-    @staticmethod
-    def assign_copied_in_subclass():
-        for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
-            setattr(subclass, 'copied', 0)
-
     def set_obj_groups(self, init=True):
         """
         Game.__init__() 안에 self.attr_name = pg.sprite.Group() 변수들을 만들고
@@ -199,8 +189,7 @@ class Result(Game):
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
 
-    ROM.init(), RAM.init(Obj), BGM.init(), Sound.init()
-    Game.assign_image_in_subclass(), Game.assign_copied_in_subclass()
+    ROM.init(), RAM.init(Obj), Image.init(Obj), BGM.init(), Sound.init()
 
     ROM.load()  # 세이브 파일 불러오기
 

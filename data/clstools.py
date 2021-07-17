@@ -39,6 +39,11 @@ class Image:
                 sprite = sprite[key] if key else sprite[self.defalut_imgkey]
         return sprite
 
+    @classmethod
+    def init(cls, objs):  # 모든 이미지 로드하기
+        for subclass in get_subclasses(objs, get_subs=False):
+            setattr(subclass, 'sprite', cls(subclass.__name__))
+
     def create_sprite_dict(self):
         try:
             img_names, csv_name = self.__search_file_names()

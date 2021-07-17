@@ -443,7 +443,7 @@ def apply_dxdy(objs: pg.sprite.Group):  # Only in main.py
 
 def naming(cls, name=None):  # Only in Obj.__init__()
     if name is None:
-        new_name, subkeys = f'{cls.__name__.lower()}_{cls.copied}', ''
+        new_name, subkeys = f'{cls.__name__.lower()}', ''
         imgkey = cls.sprite.defalut_imgkey
     elif type(name) in [list, tuple]:
         new_name, subkeys = name[0], name[1:]
