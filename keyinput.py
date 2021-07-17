@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.3.0 """
+""" Powerful Ping-Pong v1.4.0 """
 
 import sys
 
@@ -9,15 +9,20 @@ class Keyinput:
     @staticmethod
     def check_system_keys():
         if 'esc' in Key.up:  # 게임 종료
-            if SYS.mode('GAME'):
-                SYS.hard_mode = False
-                SYS.mode_change('TITLE')
-            else:  # 'TITLE', 'END'
+            if SYS.mode(STAGE):
+                SYS.mode_change(TITLE)
+            else:  # TITLE, RESULT
                 pg.quit(), sys.exit()
 
-        if 'enter' in Key.up:  # 전체화면/창모드 전환
-            if SYS.mode('TITLE', 'END') and Player.saves:
-                SYS.mode_change('GAME')  # ENTER 누르면 게임 시작
+        if 'enter' in Key.up:
+            if SYS.mode(TITLE) and RAM.player:
+                SYS.mode_change(STAGE_1)  # ENTER 누르면 게임 시작
+            elif SYS.mode_to_mode(STAGE, RESULT):
+                if 'Player' in Score.win:
+                    SYS.mode_change(STAGE_2)
+                elif 'Rival' in Score.win:
+                    SYS.mode_change(STAGE_1)
+
 
         if 'F11' in Key.up:  # 전체화면/창모드 전환
             Screen.update_resolution()

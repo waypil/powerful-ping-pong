@@ -1,10 +1,6 @@
-""" Powerful Ping-Pong v1.3.0 """
+""" Powerful Ping-Pong v1.4.0 """
 
-import pickle
-
-from data.clstools import *
-from data.framewatch import *
-from data.font import *
+from data.apis import *
 
 
 class Obj(pg.sprite.Sprite):
@@ -12,7 +8,7 @@ class Obj(pg.sprite.Sprite):
 
     [클래스 변수]
     * subclass들 중 상위 class: cls.sprite = Image()
-    * subclass들 중 하위 class: cls.s = Group(), cls.copied = 0, cls.saves = {}
+    * subclass들 중 하위 class: cls.s = Group(), cls.copied = 0
     """
 
     @classmethod
@@ -68,19 +64,13 @@ class Obj(pg.sprite.Sprite):
                          STOP: False}
         # self.is_alive = True  # self.is_frozen = False
 
-        self.save_settings_download()
+        RAM.load(self)
 
     def apply_keys(self):
         pass
 
     def update(self):  # 자식 update()의 맨 위에 배치할 것!
         self.apply_keys(), super().update()
-
-    def save_settings_download(self):  # 저장된 세팅이 있을 경우
-        if 'saves' in self.__class__.__dict__ and self.__class__.saves:
-            loaded_name = self.__class__.saves['name']
-            loaded_imgkey = self.__class__.saves['imgkey']
-            self.set_sprite(loaded_name, loaded_imgkey)
 
     def hide(self):
         self.visible(False)
@@ -178,9 +168,11 @@ class Ball(Obj):
     def __init__(self, name, xy: tuple, point, delay_sec):
         super().__init__(name, xy, point)
         self.init_rect = set_rect(self.image, SYS.rect.center, point=CENTER)
-        self.speed = 5  # default
         self.radian = random_radian()
         self.timer = Timer(True, delay_sec, immediate_start=True)
+
+        self.speed = 5  # default
+        self.speed_limit = 39
 
     def update(self):
         super().update()
@@ -226,6 +218,7 @@ class Ball(Obj):
                 self.radian = math.atan2(-self.dy, self.dx)
 
             self.speed += 0.5  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
+            self.speed = min(self.speed, self.speed_limit)
             self.coll.last = [obj]
 
     def reset(self):  # 장외 아웃
@@ -250,6 +243,11 @@ class Paddle(Obj):
 
     def __init__(self, name, xy: tuple, point):
         super().__init__(name, xy, point)
+
+        if not self.clsname('PaddleSample'):
+            xy, point = self.__class__.pos[self.imgkey]
+            self.rect = set_rect(self.image, xy, point=point)
+
         self.speed = 5  # default
 
     def move(self, command):
@@ -278,9 +276,6 @@ class Paddle(Obj):
 class Player(Paddle):
     def __init__(self):
         super().__init__('gray', (0, 0), TOPLEFT)
-        xy, point = self.__class__.pos[self.__class__.saves['name']]
-        self.rect = set_rect(self.image, xy, point=point)
-
         self.skill = {}
         self.init_skills(BoostBall, IncreaseBall, ReviveBall, WarpPaddle)
 
@@ -318,8 +313,6 @@ class Player(Paddle):
 class Rival(Paddle):
     def __init__(self):
         super().__init__('gray', (0, 0), TOPLEFT)
-        xy, point = self.__class__.pos[self.__class__.saves['name']]
-        self.rect = set_rect(self.image, xy, point=point)
 
     def update(self):
         self.move_auto()
@@ -329,12 +322,12 @@ class Rival(Paddle):
         if abs(self.rect.centery - Ball.get().rect.centery) <= TILE_LENGTH:
             pass
         elif up_down(self.rect, Ball.get().rect):
-            if SYS.hard_mode:
+            if SYS.mode(STAGE_2):
                 self.move(DOWN)
             else:
                 self.move(random.choice([DOWN, STOP]))
         else:
-            if SYS.hard_mode:
+            if SYS.mode(STAGE_2):
                 self.move(UP)
             else:
                 self.move(random.choice([UP, STOP]))
@@ -571,77 +564,3 @@ class WarpPaddle(Skill):  # 공이 있는 높이로 Paddle 워프
 #             super().invoke()
 #         else:
 #             self.player.speed //= 2
-
-
-class Score:
-    font = None
-    win = None
-    win_score = 5
-    best_time = {EASY: 0, HARD: 0}
-
-    @classmethod
-    def plus(cls, obj_name, score=1):
-        if Player.get().sprite_is(obj_name):
-            Sound['score_up'].play()
-        else:
-            Sound['score_down'].play()
-
-        cls.s[obj_name] += score
-        cls.win_check(), cls.cancel_paddle_skills()
-
-    @classmethod
-    def cancel_paddle_skills(cls):
-        player = Player.get()
-        for i in player.skill:
-            if len(Ball.s) <= 1 and player.skill[i].state == RUNNING:
-                player.skill[i].button(OFF)
-
-    @classmethod
-    def win_check(cls):
-        if cls.s[LEFT] >= cls.win_score:
-            if Player.get().sprite_is(LEFT):
-                cls.win = {'Player', LEFT}
-            else:
-                cls.win = {'Rival', LEFT}
-        elif cls.s[RIGHT] >= cls.win_score:
-            if Player.get().sprite_is(RIGHT):
-                cls.win = {'Player', RIGHT}
-            else:
-                cls.win = {'Rival', RIGHT}
-
-        if cls.win:
-            Ball.get().remove(Obj.s)  # Obj.s.remove(Ball.get())와 동일
-            SYS.mode_change('END')
-
-    @classmethod
-    def reset(cls, reset_score=True, reset_win=True):
-        if reset_score:
-            cls.s = {LEFT: 0, RIGHT: 0}  # pg.sprite.Group -> dict
-        if reset_win:
-            cls.win = False
-
-    @classmethod
-    def save(cls):
-        if cls.win and 'Player' in cls.win:
-            sec = SYS.playtime
-            if SYS.hard_mode:
-                if cls.best_time[HARD] == 0:
-                    cls.best_time[HARD] = sec
-                else:  # 과거 베스트 타임이 이미 존재한다면
-                    cls.best_time[HARD] = min(cls.best_time[HARD], sec)
-            else:
-                if cls.best_time[EASY] == 0:
-                    cls.best_time[EASY] = sec
-                else:  # 과거 베스트 타임이 이미 존재한다면
-                    cls.best_time[EASY] = min(cls.best_time[EASY], sec)
-
-            with open('data.pickle', 'wb') as savefile:  # 파일로 저장
-                pickle.dump(cls.best_time, savefile)
-
-    @classmethod
-    def load(cls):
-        try:
-            with open("data.pickle", "rb") as savefile:  # 세이브 파일 불러오기
-                cls.best_time = pickle.load(savefile)
-        except Exception:  # 세이브 파일이 없을 경우
-            cls.best_time = {EASY: 0, HARD: 0}

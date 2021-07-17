@@ -7,7 +7,21 @@ GAME_TITLE_NAME = "Powerful Ping-Pong"
 FPS = 100
 TILE_LENGTH = 40  # 타일 한 변의 길이
 
+WIN_SCORE = 5
+
 COLL_CHECK_EXCEPTION = ('Field', 'Skill')
+
+
+#
+
+
+""" MODES """
+
+
+TITLE, OPTION, END, RESULT = 'title', 'option', 'end', 'result'
+STAGE, STAGE_0, STAGE_1, STAGE_2 = 'stage', 'stage_0', 'stage_1', 'stage_2'
+
+MODES = (TITLE, OPTION, END, RESULT, STAGE_1, STAGE_2)
 
 
 #

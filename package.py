@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.3.0 """
+""" Powerful Ping-Pong v1.4.0 """
 
 from object import *
 
@@ -70,11 +70,11 @@ class PackSelectPlayer(Package):
         self.state = self.button.check()  # 위로 전달
 
         if self.state == LEFT:
-            Player.saves, Rival.saves = self.button.get()
+            RAM.player, RAM.rival = self.button.get()
         elif self.state == RIGHT:
-            Rival.saves, Player.saves = self.button.get()
+            RAM.rival, RAM.player = self.button.get()
 
-        if Player.saves:
+        if RAM.player:
             self.f[[-4, -4.5]]("SELECT YOUR COLOR.  →")
             self.f[[-7, -1]]("PRESS ENTER TO START GAME.")
             if self.state == LEFT:
@@ -169,19 +169,19 @@ class PackLeaderboard(Package):
 
         self.signboard_f()
 
-        if Score.best_time[EASY] == 0:
-            self.easy_f[GRAY](f"EASY: ---.--")
+        if ROM.best[STAGE_1] is None:
+            self.easy_f[GRAY](f"STAGE 1: ---.--")
         else:
-            self.easy_f(self.__get_best_time(EASY))
+            self.easy_f(self.__get_best_time(STAGE_1))
 
-        if Score.best_time[HARD] == 0:
-            self.hard_f[GRAY](f"HARD: ---.--")
+        if ROM.best[STAGE_2] is None:
+            self.hard_f[GRAY](f"STAGE 2: ---.--")
         else:
-            self.hard_f(self.__get_best_time(HARD))
+            self.hard_f(self.__get_best_time(STAGE_2))
             
     @staticmethod
     def __get_best_time(stage):  # EASY / HARD
-        best_time = '{:.2f}'.format(Score.best_time[stage]).rjust(6, ' ')
-        return f"{stage.upper()}: {best_time}"
+        best_time = '{:.2f}'.format(ROM.best[stage].time).rjust(6, ' ')
+        return f"{' '.join(stage.upper().split('_'))}: {best_time}"
         
 

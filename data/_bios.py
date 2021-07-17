@@ -16,29 +16,54 @@ fps = pg.time.Clock()
 
 
 class SYS:
-    __mode = 'TITLE'  # TITLE, GAME, END
-    __mode_temp = None
+    _mode = TITLE
+    _mode_temp = None
+    _mode_log = [TITLE]
+
     rect = Rect(0, 0, 1280, 720)
 
-    hard_mode = False
-    playtime = None
+    @classmethod
+    def running_check(cls):
+        return SYS._mode_temp is None or SYS._mode == SYS._mode_temp
 
     @classmethod
     def mode(cls, *modes):
         if modes:
-            return cls.__mode in modes
+            if cls._mode in modes:
+                return True
+            else:
+                return cls._mode.split('_')[0] in modes
         else:
-            return cls.__mode
+            return cls._mode
+
+    @classmethod
+    def mode_to_mode(cls, *modes):
+        if modes:
+            return cls.mode_previous(modes[0]) and cls.mode(modes[1])
+        else:
+            return tuple(cls._mode_log[-2:])
+
+    @classmethod
+    def mode_previous(cls, *modes):
+        previous_mode = cls._mode_log[-2]
+        if modes:
+            if previous_mode in modes:
+                return True
+            else:
+                return previous_mode.split('_')[0] in modes
+        else:
+            return previous_mode
 
     @classmethod
     def mode_change(cls, mode):
-        cls.__mode_temp = mode
+        cls._mode_temp = mode
 
     @classmethod
     def mode_update(cls):
-        if cls.__mode_temp is not None:
-            cls.__mode = cls.__mode_temp
-            cls.__mode_temp = None
+        if cls._mode_temp is not None:
+            cls._mode = cls._mode_temp
+            cls._mode_log.append(cls._mode)
+            cls._mode_temp = None
 
 
 class Screen:

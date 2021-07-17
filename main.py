@@ -1,11 +1,11 @@
-""" Powerful Ping-Pong v1.3.0 """
+""" Powerful Ping-Pong v1.4.0 """
 
 from keyinput import *
 
 
 """ [Import Order]
 * main > keyinput > package > object > /data/
-* /data/: clstools/framewatch > tools > _bios > _constants
+* /data/: apis > clstools/framewatch/font > tools > _bios > _constants
 """
 
 
@@ -19,11 +19,6 @@ class Game:
     def assign_copied_in_subclass():
         for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
             setattr(subclass, 'copied', 0)
-
-    @staticmethod
-    def assign_saves_in_subclass():
-        for subclass in get_subclasses(Obj, get_supers=False):  # 하위 cls들만
-            setattr(subclass, 'saves', {})
 
     def set_obj_groups(self, init=True):
         """
@@ -44,7 +39,6 @@ class Game:
 
     def __init__(self, name):
         self.name = name
-        self.clock = Stopwatch()
         self.clock_f = None
 
     def init(self):
@@ -60,36 +54,33 @@ class Game:
     def update(self):
         """게임 창, Obj 객체의 이동/상태 업데이트.
         """
-        Keyinput.update(), self.objs.update(), Package.s.update()
+        Keyinput.update(), Obj.s.update(), Package.s.update()
 
     def draw(self):
         """update 결과에 따라, 배경/스프라이트를 화면에 표시.
         """
-        Screen.on.fill(BLACK), self.objs.draw(Screen.on), Text.draw_all()
-
-    def time(self):
-        Framewatch.tick_all()  # 프레임 시간 +0.01초
-        self.clock_f(self.clock(1) if self.clock() != 0 else '')
+        Screen.on.fill(BLACK), Obj.s.draw(Screen.on), Text.draw_all()
 
     def run(self):
         """게임 실행 및 구동. (게임이 돌아가는 곳)
         """
         self.init()
-        while SYS.mode(self.name):
+        while SYS.running_check():
             self.loop(), fps.tick(FPS)
         self.off()
 
     def loop(self):
         """processing_time_gauge 데코레이션 사용을 대비해 따로 분리
         """
-        self.update(), self.draw(), self.time()
+        self.update()
+        Framewatch.tick_all()  # 프레임 시간 +0.01초
+        self.draw()
         pg.display.update()  # 모든 draw 명령을 화면에 반영
-        SYS.mode_update()
 
-    def off(self):
+    def off(self):  # 반드시 하위 클래스 off()의 제일 아래에 배치할 것!
         """게임 종료 (강제 중지로 인한 버그/오류 방지)
         """
-        self.set_obj_groups()
+        SYS.mode_update(), self.set_obj_groups()
 
 
 class Title(Game):
@@ -103,9 +94,9 @@ class Title(Game):
         """게임 엔진을 부팅. Obj 객체 생성, 객체를 해당 클래스 그룹에 추가.
         """
         super().init()
-        SYS.playtime = None
-        self.clock.off(), Game.assign_saves_in_subclass()
+        RAM.player, RAM.rival = {}, {}
         Audio.stop_all(), Audio.play(BGM['title'])
+
         # ↓ Fonts ↓
         self.title_f.appear(), self.credits.button.f.appear()
         self.leaderboard.signboard_f.appear()
@@ -124,69 +115,75 @@ class Title(Game):
         self.title_f()
 
     def off(self):
-        super().off()
         Audio.stop_all()
         # ↓ Fonts ↓
         self.title_f.hide(), self.credits.button.f.hide()
         self.leaderboard.signboard_f.hide()
+        super().off()
         
 
 class Stage(Game):
     def __init__(self, name):
         super().__init__(name)
-        self.left_score_f, self.right_score_f = None, None
+        self.score_l_f, self.score_r_f = None, None
         # ↓ Packages ↓
         self.select_player, self.credits, self.leaderboard = None, None, None
 
     def create(self):
         super().create()
-        self.left_score_f = Text(50, WHITE, rc(-7, -14.5))
-        self.right_score_f = Text(50, WHITE, rc(7, -14.5))
+        self.score_l_f = Text(50, WHITE, rc(-7, -14.5))
+        self.score_r_f = Text(50, WHITE, rc(7, -14.5))
 
         Field('black'), Ball('ball', SYS.rect.center, CENTER, 1)
-        Player(), Rival()
+        self.player, self.rival = Player(), Rival()
 
     def init(self):
-        self.clock.off(), super().init(), Score.reset(), self.clock.start()
+        super().init()
+        ROM().time.start()
 
-        if SYS.hard_mode:
+        if self.name == STAGE_2:
             Audio.exchange(BGM.s['game1'], BGM.s['game2'])
         else:
             Audio.exchange(BGM.s['game2'], BGM.s['game1'])
 
     def update(self):
-        super().update(), collision_check(self.objs), apply_dxdy(self.objs)
-        if Score.win and SYS.playtime is None:
-            SYS.playtime = self.clock(2)
+        super().update(), collision_check(Obj.s), apply_dxdy(Obj.s)
+        self.score_l_f(ROM().score[LEFT]), self.score_r_f(ROM().score[RIGHT])
 
-        self.left_score_f(Score.s[LEFT]), self.right_score_f(Score.s[RIGHT])
+    def draw(self):
+        super().draw()
+        self.clock_f(ROM().time(1) if ROM().time() != 0 else '')
 
     def off(self):
-        super().off(), self.clock.pause(), Score.save()
+        if 'Player' in ROM().win:
+            ROM.save(self.player, self.rival)
+
+        ROM.s[SYS.mode()] = ROMInner()
+        ROM().time.off()
+
+        super().off()
 
 
-class End(Game):
+class Result(Game):
     def __init__(self, name):
         super().__init__(name)
-        self.left_score_f, self.right_score_f = None, None
+        self.score_l_f, self.score_r_f = None, None
         self.left_f, self.right_f, self.notice_f = None, None, None
 
     def create(self):
         super().create()
-        self.left_score_f = Text(50, WHITE, rc(-7, -14.5))
-        self.right_score_f = Text(50, WHITE, rc(7, -14.5))
+        self.score_l_f = Text(50, WHITE, rc(-7, -14.5))
+        self.score_r_f = Text(50, WHITE, rc(7, -14.5))
         self.left_f = Text(120, CYAN, rc(-7, -7))
         self.right_f = Text(120, CYAN, rc(7, -7))
         self.notice_f = Text(40, WHITE, rc(0, 8))
         Field('black')
 
-    def init(self):
-        super().init(), Score.reset(False, False)
-
     def draw(self):
         super().draw()
-        self.clock_f(SYS.playtime)
-        self.left_score_f(Score.s[LEFT]), self.right_score_f(Score.s[RIGHT])
+        self.clock_f(ROM.last[SYS.mode_previous()].time)
+        self.score_l_f(ROM.last[SYS.mode_previous()].score[LEFT])
+        self.score_r_f(ROM.last[SYS.mode_previous()].score[RIGHT])
 
         if LEFT in Score.win:
             self.left_f("WIN"), self.right_f("LOSE")
@@ -195,32 +192,30 @@ class End(Game):
 
         if 'Player' in Score.win:
             self.notice_f("PRESS ENTER TO CHALLENGE THE HARD MODE.")
-            SYS.hard_mode = True
         elif 'Rival' in Score.win:
             self.notice_f("PRESS ENTER TO TRY AGAIN.")
-            SYS.hard_mode = False
-
-    def off(self):
-        super().off()
-        SYS.playtime = None
 
 
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
 
+    ROM.init(), RAM.init(Obj), BGM.init(), Sound.init()
     Game.assign_image_in_subclass(), Game.assign_copied_in_subclass()
-    BGM.init(), Sound.init()
 
-    Score.load()  # 세이브 파일 불러오기
+    ROM.load()  # 세이브 파일 불러오기
 
-    title, stage, end = Title('TITLE'), Stage('GAME'), End('END')
+    title, result = Title(TITLE), Result(RESULT)
+    stage_1, stage_2 = Stage(STAGE_1), Stage(STAGE_2),
 
     while True:
-        if SYS.mode('TITLE'):
+        if SYS.mode(TITLE):
             title.run()
 
-        elif SYS.mode('GAME'):
-            stage.run()
+        elif SYS.mode(STAGE_1):
+            stage_1.run()
 
-        elif SYS.mode('END'):
-            end.run()
+        elif SYS.mode(STAGE_2):
+            stage_2.run()
+
+        elif SYS.mode(RESULT):
+            result.run()
