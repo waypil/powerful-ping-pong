@@ -45,10 +45,13 @@ class ROM(metaclass=_Call):
     s = {}
 
     @classmethod
-    def init(cls):
+    def init(cls, boot=False):
         for mode in MODES:
             cls.s[mode] = ROMInner()
             cls.best[mode] = cls.last[mode] = None
+
+        if boot:  # 실행되는 곳이 if __name__ == '__main__' 안일 경우
+            ROM.load()
 
     @classmethod
     def save(cls, paddle_a, paddle_b):

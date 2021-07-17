@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.0 """
+""" Powerful Ping-Pong v1.4.1 """
 
 from keyinput import *
 
@@ -188,10 +188,8 @@ class Result(Game):
 
 if __name__ == '__main__':
     Screen.update_resolution()  # 화면 초기 설정
-
-    ROM.init(), RAM.init(Obj), Image.init(Obj), BGM.init(), Sound.init()
-
-    ROM.load()  # 세이브 파일 불러오기
+    
+    ROM.init(True), RAM.init(Obj), Image.init(Obj), BGM.init(), Sound.init()
 
     title, result = Title(TITLE), Result(RESULT)
     stage_1, stage_2 = Stage(STAGE_1), Stage(STAGE_2),
