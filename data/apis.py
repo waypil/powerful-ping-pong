@@ -2,7 +2,6 @@
 
 import pickle
 
-from data.clstools import *
 from data.framewatch import *
 from data.font import *
 
