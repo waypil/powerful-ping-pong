@@ -8,7 +8,6 @@ from data.tools import *
 class Collision:
     def __init__(self):
         self.last, self.now = [], []
-        self.timer = MashingTimer(False, 1)
 
     def all_add(self, obj):
         append(self.last, obj), append(self.now, obj)
