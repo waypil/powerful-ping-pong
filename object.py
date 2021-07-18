@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.5 """
+""" Powerful Ping-Pong v1.4.6 """
 
 from data.apis import *
 
@@ -33,7 +33,7 @@ class Obj(pg.sprite.Sprite):
 
     @classmethod
     def visible_all(cls, make_visible: bool, *exceptions):
-        for obj in subgroups(Obj) if make_visible else Obj.s:
+        for obj in subobjs(Obj) if make_visible else Obj.s:
             if obj not in exceptions:
                 obj.visible(make_visible)
 

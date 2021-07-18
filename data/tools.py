@@ -29,10 +29,6 @@ def get_subclasses(superclass, get_supers=True, get_subs=True):
     return subclass_list
 
 
-def group(*groups: pg.sprite.Group) -> pg.sprite.Group():
-    return pg.sprite.Group(*groups)
-
-
 def check_method_exists(instance, method: str):
     # 입력된 method 이름이 객체에 있으면 True, 아닐 경우 False를 반환.
     return method in vars(instance.__class__)
@@ -437,15 +433,11 @@ def random_pick(*args: Union[list, tuple]):
 """ Exclusivetools: functions for other classes """
 
 
-def subgroups(obj_class, return_objs_list=True):  # Only use in main.py
-    result = pg.sprite.Group()
+def subobjs(obj_class):  # Only use in main.py
+    result = []
     for subclass in get_subclasses(obj_class, get_supers=False):  # Obj
-        result = group(result, subclass.s)
-
-    if return_objs_list:
-        return result.sprites()
-    else:
-        return result
+        result.append(subclass.s.sprites())
+    return list_(result)
 
 
 def collision_check(objs: pg.sprite.Group):  # Only in main.py

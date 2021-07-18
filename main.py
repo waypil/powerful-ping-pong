@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.5 """
+""" Powerful Ping-Pong v1.4.6 """
 
 from keyinput import *
 
