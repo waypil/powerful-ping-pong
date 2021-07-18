@@ -97,20 +97,19 @@ class AntiMashing(Framewatch):
             return self.call(not self.is_pushable, ndigits)  # 연타 불허
 
 
-class Stopwatch(Framewatch):
-    def __init__(self, preset_sec=0, immediate_start=False):
-        super().__init__(int(preset_sec * 100), immediate_start)
-        self.checkpoints = []
+class MashingTimer(Framewatch):
+    def __init__(self, is_pushable: bool, limit_sec):
+        super().__init__()
+        self.limit = int(limit_sec * 100)
+        self.is_pushable = is_pushable
 
     def __call__(self, ndigits=None):
-        return self._get(ndigits)
-
-    def check(self):
-        self.checkpoints.append(self.now)
-
-    def off(self):
-        super().off()
-        self.checkpoints = []
+        if self.now >= self.limit:
+            self.start()
+            return self.call(self.is_pushable, ndigits)  # 연타 허용
+        else:
+            self.reset()
+            return self.call(not self.is_pushable, ndigits)  # 연타 불허
 
 
 class Timer(Framewatch):
@@ -135,6 +134,22 @@ class Timer(Framewatch):
     def tick(self, force=False):
         if (self.running and self.now > 0) or force:
             self.now -= self._elapse()
+
+
+class Stopwatch(Framewatch):
+    def __init__(self, preset_sec=0, immediate_start=False):
+        super().__init__(int(preset_sec * 100), immediate_start)
+        self.checkpoints = []
+
+    def __call__(self, ndigits=None):
+        return self._get(ndigits)
+
+    def check(self):
+        self.checkpoints.append(self.now)
+
+    def off(self):
+        super().off()
+        self.checkpoints = []
 
 
 class RotationClock(Framewatch):

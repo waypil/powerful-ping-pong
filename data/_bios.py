@@ -18,7 +18,7 @@ fps = pg.time.Clock()
 class SYS:
     _mode = TITLE
     _mode_temp = None
-    _mode_log = [TITLE]
+    _mode_log = ['', TITLE]
 
     rect = Rect(0, 0, 1280, 720)
 

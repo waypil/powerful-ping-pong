@@ -47,12 +47,12 @@ class Obj(pg.sprite.Sprite):
         super().__init__()
         Obj.s.add(self), self.__class__.s.add(self)
 
-        self.name, self.imgkey, subkeys = naming(self.__class__, name)
+        self.imgfile, self.imgkey, subkeys = naming(self.__class__, name)
 
         if name is None:
             self.image = pg.Surface((0, 0))  # must be changed or don't use
         else:
-            self.image = self.__class__.sprite[self.name, subkeys]
+            self.image = self.__class__.sprite[self.imgfile, subkeys]
 
         self.rect = set_rect(self.image, xy, point=point)
 
@@ -115,7 +115,7 @@ class Obj(pg.sprite.Sprite):
             assert indexes, f"잘못된 키워드{keywords}가 입력되었습니다."
 
             if 0 in indexes:  # self.name에 해당하는 subkey가 있다면
-                self.name = indexes[0]
+                self.imgfile = indexes[0]
 
             result = []  # [출력 파트]
 
@@ -127,7 +127,7 @@ class Obj(pg.sprite.Sprite):
 
             self.imgkey = '_'.join(result)
 
-        self.image = self.__class__.sprite[self.name][self.imgkey]
+        self.image = self.__class__.sprite[self.imgfile][self.imgkey]
 
     def sprite_is(self, *subkey):
         return batch(list_(subkey), AND, self.imgkey.split('_'))
@@ -250,7 +250,7 @@ class Ball(Obj):
 
             elif obj.clsname('Wall'):
                 Sound['pong'].play()
-                self.dy = abs(self.dy) if obj.name == TOP else -abs(self.dy)
+                self.dy = abs(self.dy) if obj.imgfile == TOP else -abs(self.dy)
                 self.radian = math.atan2(-self.dy, self.dx)
 
             self.speed += 0.5  # 어딘가에 부딪힐 때마다 조금씩 속도 증가
@@ -298,9 +298,9 @@ class Paddle(Obj):
 
     def after_coll(self, obj):
         if obj.clsname('Wall'):
-            if obj.name == TOP:
+            if obj.imgfile == TOP:
                 self.rect.top = obj.rect.bottom
-            elif obj.name == BOTTOM:
+            elif obj.imgfile == BOTTOM:
                 self.rect.bottom = obj.rect.top
         super().after_coll(obj)
 
@@ -334,9 +334,6 @@ class Player(Paddle):
             self.skill[3].button()
         if batch(self.control['Skill4'], OR, Key.down):
             self.skill[4].button()
-
-    def update(self):
-        super().update()
 
     def init_skills(self, *skill_classes):
         for i, skill_class in enumerate(skill_classes, start=1):
@@ -373,7 +370,7 @@ class PaddleSample(Paddle):
     def update(self):
         super().update()
         for button_lr in ButtonSelectLR.s.sprites():
-            if self.imgkey == button_lr.name:
+            if self.imgkey == button_lr.imgfile:
                 self.set_sprite(button_lr.imgkey.split('_')[0])  # color
 
 

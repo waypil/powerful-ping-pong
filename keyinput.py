@@ -23,7 +23,6 @@ class Keyinput:
                 elif 'Rival' in Score.win:
                     SYS.mode_change(STAGE_1)
 
-
         if 'F11' in Key.up:  # 전체화면/창모드 전환
             Screen.update_resolution()
 

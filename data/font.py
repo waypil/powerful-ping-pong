@@ -60,7 +60,7 @@ class Font:
 
     def save_draft(self):
         draft = self.size, self.color, self.xy, self.align, self.bg, self.text
-        self.drafts.append(draft)
+        append(self.drafts, draft)
 
     def load_draft(self):
         draft = self.drafts.pop()

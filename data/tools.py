@@ -8,6 +8,7 @@ from itertools import combinations  # 조합: collision_check_all()
 import numpy as np  # matrix() and grayscale() in clstools.py
 
 from data._bios import *
+from data._debugtools import *
 
 
 # def switch_assign(var, value1, value2):  # 스위치식(번갈아) 할당
@@ -258,6 +259,27 @@ def batch_bool(boolean: bool, logical_operator: str,
         return False not in comparison
 
 
+def add(_dict: dict, *args):  # dict에 안전하게 새 key:[] 생성 및 item 추가
+    if len(args) >= 3:
+        key, args, value = args[0], args[1:-1], args[-1]
+        if key not in _dict:  # 덮어쓰기 버그 방지
+            _dict[key] = {}
+        _dict[key] = add(_dict[key], *args, value)
+        return _dict
+    else:
+        key, value = args
+        try:
+            if key not in _dict:
+                _dict[key] = value
+            elif type(_dict[key]) is not list:  # int.append(value) 버그 방지
+                _dict[key] = [_dict[key], value]
+            else:
+                _dict[key].append(value)
+            return _dict
+        except TypeError:
+            raise TypeError("_dict의 층 수와 args의 층 수가 일치하지 않습니다")
+
+
 def append(_list: Union[list, pg.sprite.Group], _item, tidy: bool = False):
     """tidy=True: _item을 추가한 뒤, _list에 있는 모든 중복값들을 삭제.
     tidy=False: _list에 _item이 있으면 _item을 추가하지 않음. (기본값)
@@ -459,3 +481,10 @@ def split(*strings):  # Only in Obj.set_sprite()
     for _str in list_(strings):
         result.append(None) if _str is None else result.append(_str.split('_'))
     return list_(result)
+
+
+def folder_check(path):  # Only in Image.create_sprite_dict()
+    try:  # 경로(폴더)가 없을 경우, 빈 폴더를 생성
+        os.makedirs(path)
+    except FileExistsError:  # 이미 폴더가 있다면 그냥 무시
+        pass

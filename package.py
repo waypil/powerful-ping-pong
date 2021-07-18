@@ -83,8 +83,8 @@ class PackButtonSelectLR(Package):
             raise AssertionError
 
     def get(self, direction=ALL):
-        _left = {'name': self.l_.name, 'imgkey': self.l_.imgkey}
-        _right = {'name': self.r_.name, 'imgkey': self.r_.imgkey}
+        _left = {'name': self.l_.imgfile, 'imgkey': self.l_.imgkey}
+        _right = {'name': self.r_.imgfile, 'imgkey': self.r_.imgkey}
         
         if direction == ALL:
             return _left, _right
@@ -102,14 +102,20 @@ class PackCredits(Package):
         self.default_sentence = name
         self.button = ButtonText(40, BLACK, xy, point, WHITE, fix_text=name)
         self.popup = Decoration('credits', SYS.rect.center, CENTER)
+        self.is_on = None
 
     def update(self):
         super().update()
-        if self.button.is_pushed:
+        if self.is_on is None:
+            self.is_on = False
+            self.popup.hide()
+        elif self.button.is_pushed and not self.is_on:
+            self.is_on = True
             Audio.exchange(BGM['title'], BGM['credits'])
             Obj.available_all(False, self.button), self.popup.appear()
             self.button.f("  CLOSE  ")
-        else:
+        elif not self.button.is_pushed and self.is_on:
+            self.is_on = False
             Audio.exchange(BGM['credits'], BGM['title'])
             Obj.available_all(True, self.button), self.popup.hide()
             self.button.f.default_text = self.default_sentence

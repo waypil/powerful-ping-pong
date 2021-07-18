@@ -1,11 +1,14 @@
 """ Tools consist of methods of class """
 
+from itertools import product  # 중복순열
+
 from data.tools import *
 
 
 class Collision:
     def __init__(self):
         self.last, self.now = [], []
+        self.timer = MashingTimer(False, 1)
 
     def all_add(self, obj):
         append(self.last, obj), append(self.now, obj)
@@ -23,7 +26,6 @@ class Image:
         self.folder_name = class_name.lower()
         self.path = f"./resources/images/{self.folder_name}"
 
-        self.names = []
         self.subkeys = {}
         self.defalut_imgkey = ''
 
@@ -45,57 +47,49 @@ class Image:
             setattr(subclass, 'sprite', cls(subclass.__name__))
 
     def create_sprite_dict(self):
-        try:
-            img_names, csv_name = self.__search_file_names()
-        except:
-            os.makedirs(self.path)
-            img_names, csv_name = self.__search_file_names()
+        folder_check(self.path)
+        imgfile_names, csv_name = self._search_files()
 
         if csv_name:
             csv_array, csv_size = load_csv(f"{self.path}/{csv_name}")
-            self.__divide_sprites_process(img_names, csv_array, csv_size)
-        else:
-            self.__normal_sprites_process(img_names)
+            self._divide_sprites(imgfile_names, csv_array, csv_size)
+        else:  # Normal mode (No divide)
+            for imgfile_png in imgfile_names:
+                sprt, _, imgfile = self._get_sprite_rect_imgfile(imgfile_png)
+                self.sprite[imgfile] = sprt
 
-    def __search_file_names(self):
+    def _search_files(self):
         for _path_, _subfolder_names_, file_names in os.walk(self.path):
             csv_name, img_names = divide(file_names, '__tile__.csv')
             return img_names, csv_name
+        
+    def _get_sprite_rect_imgfile(self, imgfile_png):
+        sprt = pg.image.load(f"{self.path}/{imgfile_png}").convert_alpha()
+        rect = sprt.get_rect()
+        imgfile, _ = imgfile_png.split('.')  # 파일 이름, 확장자(png)
+        self._save_imgfile_name(imgfile)
+        return sprt, rect, imgfile
 
-    def __normal_sprites_process(self, img_names):
-        for img_name in img_names:
-            img_sprt = pg.image.load(f"{self.path}/{img_name}").convert_alpha()
-            name, _extension_ = img_name.split('.')  # 이름, 확장자(png)
-            self.__save_filename(name)
-            self.sprite[name] = img_sprt
+    def _divide_sprites(self, imgfile_names, csv_array, csv_size):
+        for imgfile_png in imgfile_names:
+            sprt, rect, imgfile = self._get_sprite_rect_imgfile(imgfile_png)
+            w, h = rect.w // csv_size[0], rect.h // csv_size[1]
 
-    def __divide_sprites_process(self, img_names, csv_array, csv_size):
-        for img_name in img_names:
-            img_sprt = pg.image.load(f"{self.path}/{img_name}").convert_alpha()
-            img_rect = img_sprt.get_rect()
-            name, _extension_ = img_name.split('.')  # 이름, 확장자(png)
-            self.__save_filename(name)
+            for tx, ty in product(range(csv_size[0]), range(csv_size[1])):
+                x, y = tx * w, ty * h  # tx: tile_x, ty: tile_y
 
-            w, h = img_rect.w // csv_size[0], img_rect.h // csv_size[1]
+                code = csv_array[tx][ty]  # '_foo_bar'
 
-            for tile_x in range(csv_size[0]):
-                for tile_y in range(csv_size[1]):
-                    x, y = tile_x * w, tile_y * h
+                if code.startswith('_'):  # '_abc' → 'abc'
+                    code = self.defalut_imgkey = code[1:]
 
-                    code = csv_array[tile_x][tile_y]
-                    if code.startswith('_'):  # '_abc' → 'abc'
-                        code = self.defalut_imgkey = code[1:]
-                    if '|grayscale|' in code:  # '|grayscale|abc'
-                        code = code.split('|')[-1]
-                        img_sprt = self.grayscale(img_sprt)
-                    self.__save_subkeys(code)
+                if '|grayscale|' in code:  # '|grayscale|abc'
+                    code, sprt = code.split('|')[-1], self.grayscale(sprt)
 
-                    if name not in self.sprite:  # 덮어쓰기 버그 방지
-                        self.sprite[name] = {}
+                self.__save_subkeys(code)
+                add(self.sprite, imgfile, code, sprt.subsurface((x, y, w, h)))
 
-                    self.sprite[name][code] = img_sprt.subsurface((x, y, w, h))
-
-    def __save_filename(self, name: str):
+    def _save_imgfile_name(self, name: str):
         if 0 not in self.subkeys:  # 덮어쓰기 버그 방지
             self.subkeys[0] = []
         append(self.subkeys[0], name)
@@ -167,13 +161,13 @@ class Audio:
 class Load:  # only use in Sound & BGM class
     @classmethod
     def init(cls):  # create_sound_dict
-        for sound_name in cls.__search_file_names():
+        for sound_name in cls._search_files():
             sound = pg.mixer.Sound(f"{cls.path}/{sound_name}")
             name, _extension_ = sound_name.split('.')  # 이름, 확장자(wav)
             cls.s[name] = sound
 
     @classmethod
-    def __search_file_names(cls):
+    def _search_files(cls):
         for _path_, _subfolder_names_, file_names in os.walk(cls.path):
             return file_names
 

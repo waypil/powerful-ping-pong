@@ -57,8 +57,8 @@ class ROM(metaclass=_Call):
         mode = SYS.mode()
         
         cls().time = cls().time(2)
-        cls().skin[paddle_a.imgkey] = (paddle_a.name, paddle_a.imgkey)
-        cls().skin[paddle_b.imgkey] = (paddle_b.name, paddle_b.imgkey)
+        cls().skin[paddle_a.imgkey] = (paddle_a.imgfile, paddle_a.imgkey)
+        cls().skin[paddle_b.imgkey] = (paddle_b.imgfile, paddle_b.imgkey)
 
         if cls.best[mode] is None or \
                 (cls().win and cls.best[mode].time > cls().time):
