@@ -1,4 +1,4 @@
-""" Powerful Ping-Pong v1.4.3 """
+""" Powerful Ping-Pong v1.4.5 """
 
 from keyinput import *
 
@@ -55,9 +55,13 @@ class Game:
         """
         self.init()
         while SYS.running_check():
+            for obj in Obj.s:
+                print(obj)
+
             self.loop(), fps.tick(FPS)
         self.off()
 
+    # @processing_time_gauge
     def loop(self):
         """processing_time_gauge 데코레이션 사용을 대비해 따로 분리
         """

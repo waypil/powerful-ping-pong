@@ -1,4 +1,4 @@
-# Powerful Ping-Pong v1.4.3
+# Powerful Ping-Pong v1.4.5
 The Indie Game Project.
 
 # Wait!
