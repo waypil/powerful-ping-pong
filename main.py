@@ -55,9 +55,6 @@ class Game:
         """
         self.init()
         while SYS.running_check():
-            for obj in Obj.s:
-                print(obj)
-
             self.loop(), fps.tick(FPS)
         self.off()
 
