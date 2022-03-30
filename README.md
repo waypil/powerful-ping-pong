@@ -1,5 +1,5 @@
 # Powerful Ping-Pong v1.4.6
-The Indie Game Project.
+DOWNLOAD : https://github.com/waypil/powerful-ping-pong/releases/tag/v1.4.6
 
 # Wait!
 |      |타입|동일표현 / 활용표현|
